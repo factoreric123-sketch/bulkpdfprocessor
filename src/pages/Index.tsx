@@ -15,8 +15,6 @@ import {
   type DeletePagesInstruction,
 } from '@/lib/pdfProcessor';
 import { downloadMergeTemplate, downloadDeleteTemplate } from '@/lib/templateGenerator';
-import mergeTemplateExample from '@/assets/merge-template-example.png';
-import deleteTemplateExample from '@/assets/delete-template-example.png';
 
 const Index = () => {
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
@@ -33,6 +31,14 @@ const Index = () => {
 
   const handleExcelFile = (files: File[]) => {
     setExcelFile(files);
+  };
+
+  const handleRemovePdfFile = (index: number) => {
+    setPdfFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveExcelFile = (index: number) => {
+    setExcelFile(prev => prev.filter((_, i) => i !== index));
   };
 
   const processMerge = async () => {
@@ -178,7 +184,7 @@ const Index = () => {
                 Bulk PDF Merger
               </h2>
               <p className="text-muted-foreground mb-6">
-                Upload your PDF files and an Excel file with merge instructions. The Excel file should have columns for source PDFs (PDF1, PDF2, etc.) and a final column for the output name.
+                Upload your PDF files and an Excel file with merge instructions. The Excel file should have columns: PDF1, PDF2, PDF3, PDF4, PDF5, and New PDF Name (last column). Empty cells are allowed if you need fewer PDFs.
               </p>
 
               <div className="grid md:grid-cols-2 gap-6">
@@ -189,6 +195,7 @@ const Index = () => {
                   title="Upload PDF Files"
                   description="Drag & drop or click to select multiple PDFs"
                   files={pdfFiles}
+                  onRemoveFile={handleRemovePdfFile}
                 />
                 <FileUpload
                   onFilesSelected={handleExcelFile}
@@ -197,6 +204,7 @@ const Index = () => {
                   title="Upload Excel Instructions"
                   description="Excel file with merge instructions"
                   files={excelFile}
+                  onRemoveFile={handleRemoveExcelFile}
                 />
               </div>
             </div>
@@ -219,6 +227,7 @@ const Index = () => {
                   title="Upload PDF Files"
                   description="Drag & drop or click to select multiple PDFs"
                   files={pdfFiles}
+                  onRemoveFile={handleRemovePdfFile}
                 />
                 <FileUpload
                   onFilesSelected={handleExcelFile}
@@ -227,6 +236,7 @@ const Index = () => {
                   title="Upload Excel Instructions"
                   description="Excel file with page deletion instructions"
                   files={excelFile}
+                  onRemoveFile={handleRemoveExcelFile}
                 />
               </div>
             </div>
@@ -260,7 +270,7 @@ const Index = () => {
 
         {/* Templates Section */}
         <div className="mt-12 bg-muted/50 rounded-lg p-6 border border-border">
-          <h3 className="font-semibold text-lg mb-6 text-foreground">Excel Templates & Examples</h3>
+          <h3 className="font-semibold text-lg mb-6 text-foreground">Excel Templates & Instructions</h3>
           
           <div className="grid md:grid-cols-2 gap-8">
             {/* Merge Template */}
@@ -277,16 +287,20 @@ const Index = () => {
                   Download Template
                 </Button>
               </div>
-              <div className="border border-border rounded-lg overflow-hidden bg-white">
-                <img 
-                  src={mergeTemplateExample} 
-                  alt="Excel template example for merging PDFs showing columns PDF1, PDF2, and New PDF Name with sample data"
-                  className="w-full h-auto"
-                />
+              <div className="bg-card border border-border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Columns:</strong> PDF1, PDF2, PDF3, PDF4, PDF5, New PDF Name
+                </p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Example Row:</strong>
+                </p>
+                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                  part1.pdf | part2.pdf | part3.pdf | part4.pdf | part5.pdf | complete.pdf
+                </code>
+                <p className="text-sm text-muted-foreground">
+                  Each row merges the listed PDFs into a single output file. Leave cells empty if you need fewer than 5 PDFs.
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Each row merges the listed PDFs into a single output file
-              </p>
             </div>
 
             {/* Delete Template */}
@@ -303,16 +317,20 @@ const Index = () => {
                   Download Template
                 </Button>
               </div>
-              <div className="border border-border rounded-lg overflow-hidden bg-white">
-                <img 
-                  src={deleteTemplateExample} 
-                  alt="Excel template example for deleting PDF pages showing columns PDF1, Delete Pages, and New PDF Name with sample data"
-                  className="w-full h-auto"
-                />
+              <div className="bg-card border border-border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Columns:</strong> PDF1, Delete Pages, New PDF Name
+                </p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Example Row:</strong>
+                </p>
+                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                  document.pdf | 1,3,5-7 | document_edited.pdf
+                </code>
+                <p className="text-sm text-muted-foreground">
+                  Specify pages to delete like "1,3,5-7" or "2-4". Use commas for individual pages and hyphens for ranges.
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Specify pages to delete like "1,3,5-7" or "2-4"
-              </p>
             </div>
           </div>
         </div>

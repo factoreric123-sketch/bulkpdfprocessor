@@ -2,9 +2,9 @@ import * as XLSX from 'xlsx';
 
 export const downloadMergeTemplate = () => {
   const data = [
-    ['PDF1', 'PDF2', 'New PDF Name'],
-    ['contract_part1.pdf', 'contract_part2.pdf', 'complete_contract.pdf'],
-    ['report_intro.pdf', 'report_body.pdf', 'full_report.pdf'],
+    ['PDF1', 'PDF2', 'PDF3', 'PDF4', 'PDF5', 'New PDF Name'],
+    ['part1.pdf', 'part2.pdf', 'part3.pdf', 'part4.pdf', 'part5.pdf', 'complete_document.pdf'],
+    ['chapter1.pdf', 'chapter2.pdf', '', '', '', 'combined_chapters.pdf'],
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(data);

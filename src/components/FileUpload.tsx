@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
-import { Upload, FileText } from 'lucide-react';
+import { Upload, FileText, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
@@ -9,6 +10,7 @@ interface FileUploadProps {
   title: string;
   description: string;
   files: File[];
+  onRemoveFile?: (index: number) => void;
 }
 
 export const FileUpload = ({
@@ -17,7 +19,8 @@ export const FileUpload = ({
   multiple = true,
   title,
   description,
-  files
+  files,
+  onRemoveFile
 }: FileUploadProps) => {
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
@@ -70,10 +73,22 @@ export const FileUpload = ({
             {files.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-3 py-2 rounded"
+                className="flex items-center justify-between gap-2 text-sm text-muted-foreground bg-secondary/50 px-3 py-2 rounded"
               >
-                <FileText className="w-4 h-4" />
-                <span className="truncate">{file.name}</span>
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <FileText className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{file.name}</span>
+                </div>
+                {onRemoveFile && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onRemoveFile(index)}
+                    className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             ))}
           </div>
