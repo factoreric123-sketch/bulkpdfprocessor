@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Merge, Scissors } from 'lucide-react';
+import { FileText, Merge, Scissors, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileUpload } from '@/components/FileUpload';
@@ -14,6 +14,9 @@ import {
   type MergeInstruction,
   type DeletePagesInstruction,
 } from '@/lib/pdfProcessor';
+import { downloadMergeTemplate, downloadDeleteTemplate } from '@/lib/templateGenerator';
+import mergeTemplateExample from '@/assets/merge-template-example.png';
+import deleteTemplateExample from '@/assets/delete-template-example.png';
 
 const Index = () => {
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
@@ -255,29 +258,61 @@ const Index = () => {
           </div>
         </Tabs>
 
-        {/* Instructions */}
+        {/* Templates Section */}
         <div className="mt-12 bg-muted/50 rounded-lg p-6 border border-border">
-          <h3 className="font-semibold text-lg mb-4 text-foreground">How to use:</h3>
-          <div className="space-y-4 text-muted-foreground">
-            <div>
-              <p className="font-medium text-foreground mb-2">For Merging PDFs:</p>
-              <ol className="list-decimal list-inside space-y-1 ml-2">
-                <li>Create an Excel file with columns for each source PDF (PDF1, PDF2, etc.)</li>
-                <li>Add a final column named "New PDF Name" for the output filename</li>
-                <li>Each row represents one merge operation</li>
-                <li>Upload all PDF files and the Excel instruction file</li>
-                <li>Click "Process PDFs" to merge and download</li>
-              </ol>
+          <h3 className="font-semibold text-lg mb-6 text-foreground">Excel Templates & Examples</h3>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Merge Template */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-foreground">PDF Merge Template</h4>
+                <Button
+                  onClick={downloadMergeTemplate}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Template
+                </Button>
+              </div>
+              <div className="border border-border rounded-lg overflow-hidden bg-white">
+                <img 
+                  src={mergeTemplateExample} 
+                  alt="Excel template example for merging PDFs showing columns PDF1, PDF2, and New PDF Name with sample data"
+                  className="w-full h-auto"
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Each row merges the listed PDFs into a single output file
+              </p>
             </div>
-            <div>
-              <p className="font-medium text-foreground mb-2">For Deleting Pages:</p>
-              <ol className="list-decimal list-inside space-y-1 ml-2">
-                <li>Create an Excel file with three columns: PDF1, Delete Pages, New PDF Name</li>
-                <li>In "Delete Pages", specify pages like "1", "2-4", or "1,3,5-7"</li>
-                <li>Each row represents one PDF to process</li>
-                <li>Upload all PDF files and the Excel instruction file</li>
-                <li>Click "Process PDFs" to process and download</li>
-              </ol>
+
+            {/* Delete Template */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-foreground">Delete Pages Template</h4>
+                <Button
+                  onClick={downloadDeleteTemplate}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Template
+                </Button>
+              </div>
+              <div className="border border-border rounded-lg overflow-hidden bg-white">
+                <img 
+                  src={deleteTemplateExample} 
+                  alt="Excel template example for deleting PDF pages showing columns PDF1, Delete Pages, and New PDF Name with sample data"
+                  className="w-full h-auto"
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Specify pages to delete like "1,3,5-7" or "2-4"
+              </p>
             </div>
           </div>
         </div>
