@@ -30,8 +30,11 @@ export const parseMergeExcel = (file: File): Promise<MergeInstruction[]> => {
           const row = jsonData[i];
           if (!row || row.length === 0) continue;
           
-          const sourceFiles = row.slice(0, -1).filter(Boolean);
-          const outputName = row[row.length - 1];
+          // Take first 5 columns as source files, last column as output name
+          const sourceFiles = row.slice(0, 5)
+            .filter(Boolean)
+            .map(f => String(f).trim());
+          const outputName = row[5] ? String(row[5]).trim() : '';
           
           if (sourceFiles.length > 0 && outputName) {
             instructions.push({ sourceFiles, outputName });
@@ -65,9 +68,9 @@ export const parseDeletePagesExcel = (file: File): Promise<DeletePagesInstructio
           const row = jsonData[i];
           if (!row || row.length < 3) continue;
           
-          const sourceFile = String(row[0]);
-          const deletePages = String(row[1]);
-          const outputName = String(row[2]);
+          const sourceFile = row[0] ? String(row[0]).trim() : '';
+          const deletePages = row[1] ? String(row[1]).trim() : '';
+          const outputName = row[2] ? String(row[2]).trim() : '';
           
           if (sourceFile && deletePages && outputName) {
             const pagesToDelete = parsePageNumbers(deletePages);
