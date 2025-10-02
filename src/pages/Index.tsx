@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Merge, Scissors, Download } from 'lucide-react';
+import { FileText, Merge, Scissors, Download, FileStack, ArrowDownUp, FileEdit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileUpload } from '@/components/FileUpload';
@@ -8,13 +8,28 @@ import { useToast } from '@/hooks/use-toast';
 import {
   parseMergeExcel,
   parseDeletePagesExcel,
+  parseSplitExcel,
+  parseReorderExcel,
+  parseRenameExcel,
   mergePDFs,
   deletePagesFromPDF,
+  splitPDF,
+  reorderPDF,
+  renamePDF,
   downloadPDFsAsZip,
   type MergeInstruction,
   type DeletePagesInstruction,
+  type SplitInstruction,
+  type ReorderInstruction,
+  type RenameInstruction,
 } from '@/lib/pdfProcessor';
-import { downloadMergeTemplate, downloadDeleteTemplate } from '@/lib/templateGenerator';
+import { 
+  downloadMergeTemplate, 
+  downloadDeleteTemplate,
+  downloadSplitTemplate,
+  downloadReorderTemplate,
+  downloadRenameTemplate
+} from '@/lib/templateGenerator';
 
 const Index = () => {
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
@@ -147,11 +162,175 @@ const Index = () => {
     }
   };
 
+  const processSplit = async () => {
+    if (pdfFiles.length === 0 || excelFile.length === 0) {
+      toast({
+        title: 'Missing files',
+        description: 'Please upload both PDF files and an Excel instruction file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStatus('processing');
+    setMessage('Parsing Excel instructions...');
+    setProgress(0);
+
+    try {
+      const instructions = await parseSplitExcel(excelFile[0]);
+      const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
+      const processedPDFs: { name: string; data: Uint8Array }[] = [];
+
+      for (let i = 0; i < instructions.length; i++) {
+        const instruction = instructions[i];
+        setMessage(`Splitting ${instruction.sourceFile}... (${i + 1}/${instructions.length})`);
+        
+        const splitPdfFiles = await splitPDF(instruction, pdfMap, (fileProgress) => {
+          const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
+          setProgress(totalProgress);
+        });
+
+        processedPDFs.push(...splitPdfFiles);
+      }
+
+      setMessage('Creating ZIP file...');
+      await downloadPDFsAsZip(processedPDFs);
+
+      setStatus('success');
+      setMessage(`Successfully split ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
+      setProgress(100);
+      toast({
+        title: 'Success!',
+        description: `Downloaded ${processedPDFs.length} split PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP`,
+      });
+    } catch (error) {
+      console.error('Error processing PDFs:', error);
+      setStatus('error');
+      setMessage(error instanceof Error ? error.message : 'An error occurred while processing PDFs');
+      toast({
+        title: 'Processing failed',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const processReorder = async () => {
+    if (pdfFiles.length === 0 || excelFile.length === 0) {
+      toast({
+        title: 'Missing files',
+        description: 'Please upload both PDF files and an Excel instruction file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStatus('processing');
+    setMessage('Parsing Excel instructions...');
+    setProgress(0);
+
+    try {
+      const instructions = await parseReorderExcel(excelFile[0]);
+      const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
+      const processedPDFs: { name: string; data: Uint8Array }[] = [];
+
+      for (let i = 0; i < instructions.length; i++) {
+        const instruction = instructions[i];
+        setMessage(`Reordering ${instruction.sourceFile}... (${i + 1}/${instructions.length})`);
+        
+        const reorderedPdfBytes = await reorderPDF(instruction, pdfMap, (fileProgress) => {
+          const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
+          setProgress(totalProgress);
+        });
+
+        processedPDFs.push({ name: instruction.outputName, data: reorderedPdfBytes });
+      }
+
+      setMessage('Creating ZIP file...');
+      await downloadPDFsAsZip(processedPDFs);
+
+      setStatus('success');
+      setMessage(`Successfully reordered ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
+      setProgress(100);
+      toast({
+        title: 'Success!',
+        description: `Downloaded ${instructions.length} reordered PDF${instructions.length > 1 ? 's' : ''} as ZIP`,
+      });
+    } catch (error) {
+      console.error('Error processing PDFs:', error);
+      setStatus('error');
+      setMessage(error instanceof Error ? error.message : 'An error occurred while processing PDFs');
+      toast({
+        title: 'Processing failed',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const processRename = async () => {
+    if (pdfFiles.length === 0 || excelFile.length === 0) {
+      toast({
+        title: 'Missing files',
+        description: 'Please upload both PDF files and an Excel instruction file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStatus('processing');
+    setMessage('Parsing Excel instructions...');
+    setProgress(0);
+
+    try {
+      const instructions = await parseRenameExcel(excelFile[0]);
+      const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
+      const processedPDFs: { name: string; data: Uint8Array }[] = [];
+
+      for (let i = 0; i < instructions.length; i++) {
+        const instruction = instructions[i];
+        setMessage(`Renaming ${instruction.oldName}... (${i + 1}/${instructions.length})`);
+        
+        const renamedPdf = await renamePDF(instruction, pdfMap);
+        processedPDFs.push(renamedPdf);
+        
+        const progress = ((i + 1) / instructions.length) * 100;
+        setProgress(progress);
+      }
+
+      setMessage('Creating ZIP file...');
+      await downloadPDFsAsZip(processedPDFs);
+
+      setStatus('success');
+      setMessage(`Successfully renamed ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
+      setProgress(100);
+      toast({
+        title: 'Success!',
+        description: `Downloaded ${instructions.length} renamed PDF${instructions.length > 1 ? 's' : ''} as ZIP`,
+      });
+    } catch (error) {
+      console.error('Error processing PDFs:', error);
+      setStatus('error');
+      setMessage(error instanceof Error ? error.message : 'An error occurred while processing PDFs');
+      toast({
+        title: 'Processing failed',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleProcess = () => {
     if (activeTab === 'merge') {
       processMerge();
-    } else {
+    } else if (activeTab === 'delete') {
       processDeletePages();
+    } else if (activeTab === 'split') {
+      processSplit();
+    } else if (activeTab === 'reorder') {
+      processReorder();
+    } else if (activeTab === 'rename') {
+      processRename();
     }
   };
 
@@ -183,14 +362,26 @@ const Index = () => {
       {/* Main Content */}
       <main className="container max-w-6xl mx-auto px-4 py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-card shadow-soft">
+          <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-5 bg-card shadow-soft">
             <TabsTrigger value="merge" className="flex items-center gap-2">
               <Merge className="w-4 h-4" />
-              Merge PDFs
+              Merge
             </TabsTrigger>
             <TabsTrigger value="delete" className="flex items-center gap-2">
               <Scissors className="w-4 h-4" />
-              Delete Pages
+              Delete
+            </TabsTrigger>
+            <TabsTrigger value="split" className="flex items-center gap-2">
+              <FileStack className="w-4 h-4" />
+              Split
+            </TabsTrigger>
+            <TabsTrigger value="reorder" className="flex items-center gap-2">
+              <ArrowDownUp className="w-4 h-4" />
+              Reorder
+            </TabsTrigger>
+            <TabsTrigger value="rename" className="flex items-center gap-2">
+              <FileEdit className="w-4 h-4" />
+              Rename
             </TabsTrigger>
           </TabsList>
 
@@ -258,6 +449,102 @@ const Index = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="split" className="space-y-6">
+            <div className="bg-card rounded-lg p-6 shadow-medium border border-border">
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">
+                Bulk PDF Splitting
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Upload your PDF files and an Excel file with split instructions. The Excel file should have columns: PDF File, Page Ranges (e.g., "1-5, 6-10"), and Output Names.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <FileUpload
+                  onFilesSelected={handlePdfFiles}
+                  accept=".pdf"
+                  multiple={true}
+                  title="Upload PDF Files"
+                  description="Drag & drop or click to select multiple PDFs"
+                  files={pdfFiles}
+                  onRemoveFile={handleRemovePdfFile}
+                />
+                <FileUpload
+                  onFilesSelected={handleExcelFile}
+                  accept=".xlsx,.xls"
+                  multiple={false}
+                  title="Upload Excel Instructions"
+                  description="Excel file with split instructions"
+                  files={excelFile}
+                  onRemoveFile={handleRemoveExcelFile}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="reorder" className="space-y-6">
+            <div className="bg-card rounded-lg p-6 shadow-medium border border-border">
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">
+                Bulk Page Reordering
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Upload your PDF files and an Excel file with reorder instructions. The Excel file should have columns: PDF File, New Page Order (e.g., "5,2,1-3"), and Output Name.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <FileUpload
+                  onFilesSelected={handlePdfFiles}
+                  accept=".pdf"
+                  multiple={true}
+                  title="Upload PDF Files"
+                  description="Drag & drop or click to select multiple PDFs"
+                  files={pdfFiles}
+                  onRemoveFile={handleRemovePdfFile}
+                />
+                <FileUpload
+                  onFilesSelected={handleExcelFile}
+                  accept=".xlsx,.xls"
+                  multiple={false}
+                  title="Upload Excel Instructions"
+                  description="Excel file with reorder instructions"
+                  files={excelFile}
+                  onRemoveFile={handleRemoveExcelFile}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="rename" className="space-y-6">
+            <div className="bg-card rounded-lg p-6 shadow-medium border border-border">
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">
+                Bulk PDF Renaming
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Upload your PDF files and an Excel file with rename instructions. The Excel file should have columns: Old File Name and New File Name.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <FileUpload
+                  onFilesSelected={handlePdfFiles}
+                  accept=".pdf"
+                  multiple={true}
+                  title="Upload PDF Files"
+                  description="Drag & drop or click to select multiple PDFs"
+                  files={pdfFiles}
+                  onRemoveFile={handleRemovePdfFile}
+                />
+                <FileUpload
+                  onFilesSelected={handleExcelFile}
+                  accept=".xlsx,.xls"
+                  multiple={false}
+                  title="Upload Excel Instructions"
+                  description="Excel file with rename instructions"
+                  files={excelFile}
+                  onRemoveFile={handleRemoveExcelFile}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
           {/* Processing Status */}
           <ProcessingStatus status={status} progress={progress} message={message} />
 
@@ -288,7 +575,7 @@ const Index = () => {
         <div className="mt-12 bg-muted/50 rounded-lg p-6 border border-border">
           <h3 className="font-semibold text-lg mb-6 text-foreground">Excel Templates & Instructions</h3>
           
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Merge Template */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -345,6 +632,96 @@ const Index = () => {
                 </code>
                 <p className="text-sm text-muted-foreground">
                   Specify pages to delete like "1,3,5-7" or "2-4". Use commas for individual pages and hyphens for ranges.
+                </p>
+              </div>
+            </div>
+
+            {/* Split Template */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-foreground">Split Template</h4>
+                <Button
+                  onClick={downloadSplitTemplate}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              </div>
+              <div className="bg-card border border-border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Columns:</strong> PDF File, Page Ranges, Output Names
+                </p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Example:</strong>
+                </p>
+                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                  document.pdf | 1-5, 6-10 | part1.pdf, part2.pdf
+                </code>
+                <p className="text-sm text-muted-foreground">
+                  Split a PDF into multiple files using page ranges. Each range creates a separate output file.
+                </p>
+              </div>
+            </div>
+
+            {/* Reorder Template */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-foreground">Reorder Template</h4>
+                <Button
+                  onClick={downloadReorderTemplate}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              </div>
+              <div className="bg-card border border-border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Columns:</strong> PDF File, New Page Order, Output Name
+                </p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Example:</strong>
+                </p>
+                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                  document.pdf | 5,2,1-3,6 | reordered.pdf
+                </code>
+                <p className="text-sm text-muted-foreground">
+                  Rearrange pages in a PDF. Use numbers for individual pages and ranges like "1-3".
+                </p>
+              </div>
+            </div>
+
+            {/* Rename Template */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-foreground">Rename Template</h4>
+                <Button
+                  onClick={downloadRenameTemplate}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              </div>
+              <div className="bg-card border border-border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Columns:</strong> Old File Name, New File Name
+                </p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Example:</strong>
+                </p>
+                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                  document.pdf | renamed_document.pdf
+                </code>
+                <p className="text-sm text-muted-foreground">
+                  Bulk rename PDF files according to your Excel instructions.
                 </p>
               </div>
             </div>

@@ -27,3 +27,45 @@ export const downloadDeleteTemplate = () => {
   
   XLSX.writeFile(wb, 'PDF_Delete_Pages_Template.xlsx');
 };
+
+export const downloadSplitTemplate = () => {
+  const data = [
+    ['PDF File', 'Page Ranges', 'Output Names'],
+    ['document.pdf', '1-5, 6-10, 11-15', 'part1.pdf, part2.pdf, part3.pdf'],
+    ['report.pdf', '1-3, 4-8', 'section1.pdf, section2.pdf'],
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Split Instructions');
+  
+  XLSX.writeFile(wb, 'PDF_Split_Template.xlsx');
+};
+
+export const downloadReorderTemplate = () => {
+  const data = [
+    ['PDF File', 'New Page Order', 'Output Name'],
+    ['document.pdf', '5,2,1-3,6', 'reordered.pdf'],
+    ['report.pdf', '3,1,2', 'report_reordered.pdf'],
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Reorder Instructions');
+  
+  XLSX.writeFile(wb, 'PDF_Reorder_Template.xlsx');
+};
+
+export const downloadRenameTemplate = () => {
+  const data = [
+    ['Old File Name', 'New File Name'],
+    ['document.pdf', 'renamed_document.pdf'],
+    ['report.pdf', 'final_report.pdf'],
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Rename Instructions');
+  
+  XLSX.writeFile(wb, 'PDF_Rename_Template.xlsx');
+};
