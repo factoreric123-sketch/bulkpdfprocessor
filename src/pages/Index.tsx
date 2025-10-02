@@ -10,7 +10,7 @@ import {
   parseDeletePagesExcel,
   mergePDFs,
   deletePagesFromPDF,
-  downloadPDF,
+  downloadPDFsAsZip,
   type MergeInstruction,
   type DeletePagesInstruction,
 } from '@/lib/pdfProcessor';
@@ -58,22 +58,30 @@ const Index = () => {
     try {
       const instructions = await parseMergeExcel(excelFile[0]);
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
+      const processedPDFs: { name: string; data: Uint8Array }[] = [];
 
       for (let i = 0; i < instructions.length; i++) {
         const instruction = instructions[i];
-        setMessage(`Merging PDFs for ${instruction.outputName}...`);
+        setMessage(`Merging PDFs for ${instruction.outputName}... (${i + 1}/${instructions.length})`);
         
         const mergedPdfBytes = await mergePDFs(instruction, pdfMap, (fileProgress) => {
           const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
           setProgress(totalProgress);
         });
 
-        downloadPDF(mergedPdfBytes, instruction.outputName);
+        processedPDFs.push({ name: instruction.outputName, data: mergedPdfBytes });
       }
+
+      setMessage('Creating ZIP file...');
+      await downloadPDFsAsZip(processedPDFs);
 
       setStatus('success');
       setMessage(`Successfully merged ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
       setProgress(100);
+      toast({
+        title: 'Success!',
+        description: `Downloaded ${instructions.length} merged PDF${instructions.length > 1 ? 's' : ''} as ZIP`,
+      });
     } catch (error) {
       console.error('Error processing PDFs:', error);
       setStatus('error');
@@ -103,22 +111,30 @@ const Index = () => {
     try {
       const instructions = await parseDeletePagesExcel(excelFile[0]);
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
+      const processedPDFs: { name: string; data: Uint8Array }[] = [];
 
       for (let i = 0; i < instructions.length; i++) {
         const instruction = instructions[i];
-        setMessage(`Processing ${instruction.sourceFile}...`);
+        setMessage(`Processing ${instruction.sourceFile}... (${i + 1}/${instructions.length})`);
         
         const processedPdfBytes = await deletePagesFromPDF(instruction, pdfMap, (fileProgress) => {
           const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
           setProgress(totalProgress);
         });
 
-        downloadPDF(processedPdfBytes, instruction.outputName);
+        processedPDFs.push({ name: instruction.outputName, data: processedPdfBytes });
       }
+
+      setMessage('Creating ZIP file...');
+      await downloadPDFsAsZip(processedPDFs);
 
       setStatus('success');
       setMessage(`Successfully processed ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
       setProgress(100);
+      toast({
+        title: 'Success!',
+        description: `Downloaded ${instructions.length} processed PDF${instructions.length > 1 ? 's' : ''} as ZIP`,
+      });
     } catch (error) {
       console.error('Error processing PDFs:', error);
       setStatus('error');

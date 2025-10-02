@@ -1,6 +1,7 @@
 import { PDFDocument } from 'pdf-lib';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
 
 export interface MergeInstruction {
   sourceFiles: string[];
@@ -163,4 +164,17 @@ export const deletePagesFromPDF = async (
 export const downloadPDF = (pdfBytes: Uint8Array, fileName: string) => {
   const blob = new Blob([pdfBytes], { type: 'application/pdf' });
   saveAs(blob, fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`);
+};
+
+export const downloadPDFsAsZip = async (pdfFiles: { name: string; data: Uint8Array }[]) => {
+  const zip = new JSZip();
+  
+  pdfFiles.forEach(({ name, data }) => {
+    const fileName = name.endsWith('.pdf') ? name : `${name}.pdf`;
+    zip.file(fileName, data);
+  });
+  
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+  saveAs(zipBlob, `processed_pdfs_${timestamp}.zip`);
 };
