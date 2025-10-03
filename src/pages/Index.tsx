@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileUpload } from '@/components/FileUpload';
 import { ProcessingStatus } from '@/components/ProcessingStatus';
+import { CreditDisplay } from '@/components/CreditDisplay';
+import { NoCreditsDialog } from '@/components/NoCreditsDialog';
 import { useToast } from '@/hooks/use-toast';
+import { useCredits } from '@/hooks/useCredits';
 import {
   parseMergeExcel,
   parseDeletePagesExcel,
@@ -38,7 +41,10 @@ const Index = () => {
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState('');
   const [activeTab, setActiveTab] = useState('merge');
+  const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
+  const [requiredCredits, setRequiredCredits] = useState(0);
   const { toast } = useToast();
+  const { credits, isLoading: creditsLoading, deductCredits, hasCredits } = useCredits();
 
   const handlePdfFiles = (files: File[]) => {
     setPdfFiles(files);
@@ -72,6 +78,16 @@ const Index = () => {
 
     try {
       const instructions = await parseMergeExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      // Check credits before processing
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
       const processedPDFs: { name: string; data: Uint8Array }[] = [];
 
@@ -90,12 +106,15 @@ const Index = () => {
       setMessage('Creating ZIP file...');
       await downloadPDFsAsZip(processedPDFs);
 
+      // Deduct credits after successful processing
+      deductCredits(creditsNeeded);
+
       setStatus('success');
       setMessage(`Successfully merged ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
       setProgress(100);
       toast({
         title: 'Success!',
-        description: `Downloaded ${instructions.length} merged PDF${instructions.length > 1 ? 's' : ''} as ZIP`,
+        description: `Downloaded ${instructions.length} merged PDF${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
       console.error('Error processing PDFs:', error);
@@ -125,6 +144,16 @@ const Index = () => {
 
     try {
       const instructions = await parseDeletePagesExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      // Check credits before processing
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
       const processedPDFs: { name: string; data: Uint8Array }[] = [];
 
@@ -143,12 +172,15 @@ const Index = () => {
       setMessage('Creating ZIP file...');
       await downloadPDFsAsZip(processedPDFs);
 
+      // Deduct credits after successful processing
+      deductCredits(creditsNeeded);
+
       setStatus('success');
       setMessage(`Successfully processed ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
       setProgress(100);
       toast({
         title: 'Success!',
-        description: `Downloaded ${instructions.length} processed PDF${instructions.length > 1 ? 's' : ''} as ZIP`,
+        description: `Downloaded ${instructions.length} processed PDF${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
       console.error('Error processing PDFs:', error);
@@ -178,6 +210,16 @@ const Index = () => {
 
     try {
       const instructions = await parseSplitExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      // Check credits before processing
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
       const processedPDFs: { name: string; data: Uint8Array }[] = [];
 
@@ -196,12 +238,15 @@ const Index = () => {
       setMessage('Creating ZIP file...');
       await downloadPDFsAsZip(processedPDFs);
 
+      // Deduct credits after successful processing
+      deductCredits(creditsNeeded);
+
       setStatus('success');
       setMessage(`Successfully split ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
       setProgress(100);
       toast({
         title: 'Success!',
-        description: `Downloaded ${processedPDFs.length} split PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP`,
+        description: `Downloaded ${processedPDFs.length} split PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
       console.error('Error processing PDFs:', error);
@@ -231,6 +276,16 @@ const Index = () => {
 
     try {
       const instructions = await parseReorderExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      // Check credits before processing
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
       const processedPDFs: { name: string; data: Uint8Array }[] = [];
 
@@ -249,12 +304,15 @@ const Index = () => {
       setMessage('Creating ZIP file...');
       await downloadPDFsAsZip(processedPDFs);
 
+      // Deduct credits after successful processing
+      deductCredits(creditsNeeded);
+
       setStatus('success');
       setMessage(`Successfully reordered ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
       setProgress(100);
       toast({
         title: 'Success!',
-        description: `Downloaded ${instructions.length} reordered PDF${instructions.length > 1 ? 's' : ''} as ZIP`,
+        description: `Downloaded ${instructions.length} reordered PDF${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
       console.error('Error processing PDFs:', error);
@@ -284,6 +342,16 @@ const Index = () => {
 
     try {
       const instructions = await parseRenameExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      // Check credits before processing
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
       const processedPDFs: { name: string; data: Uint8Array }[] = [];
 
@@ -301,12 +369,15 @@ const Index = () => {
       setMessage('Creating ZIP file...');
       await downloadPDFsAsZip(processedPDFs);
 
+      // Deduct credits after successful processing
+      deductCredits(creditsNeeded);
+
       setStatus('success');
       setMessage(`Successfully renamed ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
       setProgress(100);
       toast({
         title: 'Success!',
-        description: `Downloaded ${instructions.length} renamed PDF${instructions.length > 1 ? 's' : ''} as ZIP`,
+        description: `Downloaded ${instructions.length} renamed PDF${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
       console.error('Error processing PDFs:', error);
@@ -353,11 +424,19 @@ const Index = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             PDF Bulk Processor
           </h1>
-          <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto mb-6">
             Merge multiple PDFs or delete specific pages in bulk using Excel instructions
           </p>
+          <CreditDisplay credits={credits} isLoading={creditsLoading} />
         </div>
       </header>
+      
+      <NoCreditsDialog 
+        open={showNoCreditsDialog}
+        onOpenChange={setShowNoCreditsDialog}
+        requiredCredits={requiredCredits}
+        availableCredits={credits}
+      />
 
       {/* Main Content */}
       <main className="container max-w-6xl mx-auto px-4 py-12">
