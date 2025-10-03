@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,14 +15,26 @@ interface NoCreditsDialogProps {
   onOpenChange: (open: boolean) => void;
   requiredCredits: number;
   availableCredits: number;
+  isAuthenticated: boolean;
 }
 
 export const NoCreditsDialog = ({ 
   open, 
   onOpenChange, 
   requiredCredits, 
-  availableCredits 
+  availableCredits,
+  isAuthenticated 
 }: NoCreditsDialogProps) => {
+  const navigate = useNavigate();
+
+  const handleAction = () => {
+    if (!isAuthenticated) {
+      navigate('/auth');
+    } else {
+      onOpenChange(false);
+    }
+  };
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -36,7 +49,8 @@ export const NoCreditsDialog = ({
               but you only have <strong>{availableCredits} credit{availableCredits !== 1 ? 's' : ''}</strong> remaining.
             </p>
             <p className="text-foreground font-medium">
-              Sign up now to continue processing PDFs with a paid subscription!
+              {!isAuthenticated && 'Sign in to get more credits or upgrade your account.'}
+              {isAuthenticated && 'Please upgrade your account to continue processing PDFs.'}
             </p>
             <div className="bg-muted p-3 rounded-md text-sm">
               <p className="font-semibold mb-1">What's a credit?</p>
@@ -47,7 +61,9 @@ export const NoCreditsDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction>Got it</AlertDialogAction>
+          <AlertDialogAction onClick={handleAction}>
+            {isAuthenticated ? 'Got it' : 'Sign In'}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { FileText, Merge, Scissors, Download, FileStack, ArrowDownUp, FileEdit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, Merge, Scissors, Download, FileStack, ArrowDownUp, FileEdit, LogOut } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileUpload } from '@/components/FileUpload';
@@ -44,7 +46,25 @@ const Index = () => {
   const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
   const [requiredCredits, setRequiredCredits] = useState(0);
   const { toast } = useToast();
-  const { credits, isLoading: creditsLoading, deductCredits, hasCredits } = useCredits();
+  const navigate = useNavigate();
+  const { credits, isLoading: creditsLoading, deductCredits, hasCredits, user } = useCredits();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: 'Signed out',
+        description: 'You have been signed out successfully.',
+      });
+      navigate('/auth');
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to sign out.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handlePdfFiles = (files: File[]) => {
     setPdfFiles(files);
@@ -417,17 +437,44 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <header className="bg-gradient-primary text-primary-foreground py-16 px-4">
-        <div className="container max-w-6xl mx-auto text-center">
-          <div className="flex justify-center mb-6">
-            <FileText className="w-16 h-16" />
+        <div className="container max-w-6xl mx-auto">
+          <div className="flex justify-between items-start mb-8">
+            <div className="flex-1" />
+            <div className="flex-1 flex justify-center">
+              <FileText className="w-16 h-16" />
+            </div>
+            <div className="flex-1 flex justify-end">
+              {user ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/auth')}
+                  className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20"
+                >
+                  Sign In
+                </Button>
+              )}
+            </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            PDF Bulk Processor
-          </h1>
-          <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto mb-6">
-            Merge multiple PDFs or delete specific pages in bulk using Excel instructions
-          </p>
-          <CreditDisplay credits={credits} isLoading={creditsLoading} />
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              PDF Bulk Processor
+            </h1>
+            <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto mb-6">
+              Merge multiple PDFs or delete specific pages in bulk using Excel instructions
+            </p>
+            <CreditDisplay credits={credits} isLoading={creditsLoading} />
+          </div>
         </div>
       </header>
       
@@ -436,6 +483,7 @@ const Index = () => {
         onOpenChange={setShowNoCreditsDialog}
         requiredCredits={requiredCredits}
         availableCredits={credits}
+        isAuthenticated={!!user}
       />
 
       {/* Main Content */}
