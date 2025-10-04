@@ -67,9 +67,10 @@ const plans: Plan[] = [
 ];
 
 export const SubscriptionPlans = () => {
-  const { subscription, createCheckout, openCustomerPortal, user } = useSubscription();
+  const { subscription, createCheckout, openCustomerPortal, user, isLoading } = useSubscription();
   const { toast } = useToast();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const [processingPriceId, setProcessingPriceId] = useState<string | null>(null);
 
   const handleSubscribe = async (priceId: string) => {
     if (!user) {
@@ -81,29 +82,46 @@ export const SubscriptionPlans = () => {
       return;
     }
 
-    const url = await createCheckout(priceId);
-    if (url) {
-      window.open(url, '_blank');
-    } else {
+    setProcessingPriceId(priceId);
+    
+    try {
+      const url = await createCheckout(priceId);
+      if (url) {
+        window.open(url, '_blank');
+      } else {
+        throw new Error('Failed to create checkout session');
+      }
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to create checkout session. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setProcessingPriceId(null);
     }
   };
 
   const handleManageSubscription = async () => {
-    const url = await openCustomerPortal();
-    if (url) {
-      window.open(url, '_blank');
-    } else {
+    try {
+      const url = await openCustomerPortal();
+      if (url) {
+        window.open(url, '_blank');
+      } else {
+        throw new Error('Failed to open customer portal');
+      }
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to open customer portal. Please try again.",
         variant: "destructive",
       });
     }
+  };
+
+  const isPlanActive = (planName: string) => {
+    if (!subscription.plan_name) return false;
+    return subscription.plan_name.toLowerCase().includes(planName.toLowerCase());
   };
 
   return (
@@ -144,42 +162,52 @@ export const SubscriptionPlans = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {plans.map((plan) => (
-          <Card key={plan.name} className={`relative ${plan.popular ? 'border-primary shadow-lg' : ''}`}>
-            {plan.popular && (
-              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Most Popular</Badge>
-            )}
-            <CardHeader>
-              <CardTitle>{plan.name}</CardTitle>
-              <CardDescription>
-                <span className="text-3xl font-bold">
-                  {billingPeriod === 'monthly' ? plan.monthlyPrice : plan.annualPrice}
-                </span>
-                <span className="text-muted-foreground">/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
-              </CardDescription>
-              <p className="text-sm text-muted-foreground mt-2">{plan.credits}</p>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className="w-full"
-                variant={plan.popular ? "default" : "outline"}
-                onClick={() => handleSubscribe(billingPeriod === 'monthly' ? plan.monthlyPriceId : plan.annualPriceId)}
-              >
-                {subscription.plan_name === plan.name ? 'Current Plan' : 'Subscribe'}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+        {plans.map((plan) => {
+          const isActive = isPlanActive(plan.name);
+          const priceId = billingPeriod === 'monthly' ? plan.monthlyPriceId : plan.annualPriceId;
+          const isProcessing = processingPriceId === priceId;
+          
+          return (
+            <Card key={plan.name} className={`relative ${plan.popular ? 'border-primary shadow-lg' : ''} ${isActive ? 'ring-2 ring-primary' : ''}`}>
+              {plan.popular && (
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Most Popular</Badge>
+              )}
+              {isActive && (
+                <Badge className="absolute -top-3 right-4 bg-green-500">Your Plan</Badge>
+              )}
+              <CardHeader>
+                <CardTitle>{plan.name}</CardTitle>
+                <CardDescription>
+                  <span className="text-3xl font-bold">
+                    {billingPeriod === 'monthly' ? plan.monthlyPrice : plan.annualPrice}
+                  </span>
+                  <span className="text-muted-foreground">/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
+                </CardDescription>
+                <p className="text-sm text-muted-foreground mt-2">{plan.credits}</p>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  className="w-full"
+                  variant={plan.popular ? "default" : "outline"}
+                  onClick={() => handleSubscribe(priceId)}
+                  disabled={isActive || isProcessing || isLoading}
+                >
+                  {isProcessing ? 'Processing...' : isActive ? 'Current Plan' : 'Subscribe'}
+                </Button>
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
