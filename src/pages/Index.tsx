@@ -47,7 +47,7 @@ const Index = () => {
   const [requiredCredits, setRequiredCredits] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { credits, isLoading: creditsLoading, deductCredits, hasCredits, user } = useCredits();
+  const { credits, isLoading: creditsLoading, deductCredits, hasCredits, user, subscription, isUnlimited } = useCredits();
 
   const handleLogout = async () => {
     try {
@@ -482,7 +482,12 @@ const Index = () => {
             <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto mb-6">
               Merge multiple PDFs or delete specific pages in bulk using Excel instructions
             </p>
-            <CreditDisplay credits={credits} isLoading={creditsLoading} />
+            <CreditDisplay 
+              credits={credits} 
+              isLoading={creditsLoading} 
+              planName={subscription.plan_name}
+              isUnlimited={isUnlimited}
+            />
           </div>
         </div>
       </header>

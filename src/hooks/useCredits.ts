@@ -5,10 +5,66 @@ import type { User } from '@supabase/supabase-js';
 const CREDITS_KEY = 'pdf_processor_credits';
 const INITIAL_CREDITS = 3;
 
+interface SubscriptionData {
+  subscribed: boolean;
+  product_id: string | null;
+  plan_name: string | null;
+  subscription_end: string | null;
+  credits_per_month: number | null;
+}
+
 export const useCredits = () => {
   const [credits, setCredits] = useState<number>(INITIAL_CREDITS);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionData>({
+    subscribed: false,
+    product_id: null,
+    plan_name: null,
+    subscription_end: null,
+    credits_per_month: null,
+  });
+
+  const checkAndRefreshSubscription = async (userId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      
+      if (!error && data) {
+        setSubscription(data);
+        
+        // If user has unlimited credits (Business plan), set credits to a high number
+        if (data.subscribed && data.credits_per_month === null) {
+          setCredits(999999);
+        } else if (data.subscribed && data.credits_per_month) {
+          // Check if we need to refill credits based on subscription period
+          const { data: userCreditsData } = await supabase
+            .from('user_credits')
+            .select('credits, updated_at')
+            .eq('user_id', userId)
+            .single();
+
+          if (userCreditsData) {
+            const lastUpdate = new Date(userCreditsData.updated_at);
+            const now = new Date();
+            const daysSinceUpdate = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+            
+            // Refill credits if it's been more than 30 days
+            if (daysSinceUpdate >= 30) {
+              await supabase
+                .from('user_credits')
+                .update({ credits: data.credits_per_month })
+                .eq('user_id', userId);
+              setCredits(data.credits_per_month);
+            } else {
+              setCredits(userCreditsData.credits);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+    }
+  };
 
   // Initialize user and credits
   useEffect(() => {
@@ -19,6 +75,7 @@ export const useCredits = () => {
       if (session?.user) {
         // Load from database for authenticated users
         await loadCreditsFromDB(session.user.id);
+        await checkAndRefreshSubscription(session.user.id);
       } else {
         // Load from localStorage for anonymous users
         const storedCredits = localStorage.getItem(CREDITS_KEY);
@@ -34,7 +91,7 @@ export const useCredits = () => {
     initAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       
       if (event === 'SIGNED_IN' && session?.user) {
@@ -42,15 +99,23 @@ export const useCredits = () => {
         setTimeout(async () => {
           await migrateLocalCreditsToDb(session.user.id);
           await loadCreditsFromDB(session.user.id);
+          await checkAndRefreshSubscription(session.user.id);
         }, 0);
       } else if (event === 'SIGNED_OUT') {
         // Reset to localStorage
         const storedCredits = localStorage.getItem(CREDITS_KEY);
         setCredits(storedCredits ? parseInt(storedCredits, 10) : INITIAL_CREDITS);
+        setSubscription({
+          subscribed: false,
+          product_id: null,
+          plan_name: null,
+          subscription_end: null,
+          credits_per_month: null,
+        });
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => authSubscription.unsubscribe();
   }, []);
 
   const loadCreditsFromDB = async (userId: string) => {
@@ -89,14 +154,16 @@ export const useCredits = () => {
   useEffect(() => {
     if (!isLoading) {
       if (user) {
-        // Update database for authenticated users
-        supabase
-          .from('user_credits')
-          .update({ credits })
-          .eq('user_id', user.id)
-          .then(({ error }) => {
-            if (error) console.error('Error updating credits:', error);
-          });
+        // Don't update DB for unlimited credits
+        if (credits !== 999999) {
+          supabase
+            .from('user_credits')
+            .update({ credits })
+            .eq('user_id', user.id)
+            .then(({ error }) => {
+              if (error) console.error('Error updating credits:', error);
+            });
+        }
       } else {
         // Update localStorage for anonymous users
         localStorage.setItem(CREDITS_KEY, credits.toString());
@@ -105,6 +172,11 @@ export const useCredits = () => {
   }, [credits, isLoading, user]);
 
   const deductCredits = (amount: number): boolean => {
+    // Unlimited credits (Business plan)
+    if (credits === 999999) {
+      return true;
+    }
+    
     if (credits >= amount) {
       setCredits(prev => prev - amount);
       return true;
@@ -113,6 +185,10 @@ export const useCredits = () => {
   };
 
   const hasCredits = (amount: number = 1): boolean => {
+    // Unlimited credits (Business plan)
+    if (credits === 999999) {
+      return true;
+    }
     return credits >= amount;
   };
 
@@ -128,5 +204,7 @@ export const useCredits = () => {
     hasCredits,
     resetCredits,
     user,
+    subscription,
+    isUnlimited: credits === 999999,
   };
 };
