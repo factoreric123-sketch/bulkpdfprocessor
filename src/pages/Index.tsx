@@ -642,13 +642,16 @@ const Index = () => {
     } else if (activeTab === 'reorder') {
       processReorder();
     } else if (activeTab === 'rename') {
-      processRename();
+      // Handle both PDF and Word renaming in the same tab
+      if (pdfFiles.length > 0) {
+        processRename();
+      } else if (wordFiles.length > 0) {
+        processRenameWord();
+      }
     } else if (activeTab === 'wordtopdf') {
       processWordToPdf();
     } else if (activeTab === 'pdftoword') {
       processPdfToWord();
-    } else if (activeTab === 'renameword') {
-      processRenameWord();
     }
   };
 
@@ -745,7 +748,7 @@ const Index = () => {
         <SubscriptionStatus />
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full max-w-6xl mx-auto grid-cols-4 md:grid-cols-8 bg-card shadow-soft">
+          <TabsList className="grid w-full max-w-6xl mx-auto grid-cols-4 md:grid-cols-7 bg-card shadow-soft">
             <TabsTrigger value="merge" className="flex items-center gap-2">
               <Merge className="w-4 h-4" />
               Merge
@@ -773,10 +776,6 @@ const Index = () => {
             <TabsTrigger value="pdftoword" className="flex items-center gap-2">
               <FileType className="w-4 h-4" />
               PDF→Word
-            </TabsTrigger>
-            <TabsTrigger value="renameword" className="flex items-center gap-2">
-              <File className="w-4 h-4" />
-              Rename Word
             </TabsTrigger>
           </TabsList>
 
@@ -911,21 +910,30 @@ const Index = () => {
           <TabsContent value="rename" className="space-y-6">
             <div className="bg-card rounded-lg p-6 shadow-medium border border-border">
               <h2 className="text-2xl font-semibold mb-4 text-foreground">
-                Bulk PDF Renaming
+                Bulk File Renaming
               </h2>
               <p className="text-muted-foreground mb-6">
-                Upload your PDF files and an Excel file with rename instructions. The Excel file should have columns: Old File Name and New File Name.
+                Upload your PDF or Word files and an Excel file with rename instructions. The Excel file should have columns: Old File Name and New File Name.
               </p>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-3 gap-6">
                 <FileUpload
                   onFilesSelected={handlePdfFiles}
                   accept=".pdf"
                   multiple={true}
-                  title="Upload PDF Files"
-                  description="Drag & drop or click to select multiple PDFs"
+                  title="Upload PDF Files (Optional)"
+                  description="Drag & drop or click to select PDFs"
                   files={pdfFiles}
                   onRemoveFile={handleRemovePdfFile}
+                />
+                <FileUpload
+                  onFilesSelected={handleWordFiles}
+                  accept=".docx,.doc"
+                  multiple={true}
+                  title="Upload Word Files (Optional)"
+                  description="Drag & drop or click to select Word files"
+                  files={wordFiles}
+                  onRemoveFile={handleRemoveWordFile}
                 />
                 <FileUpload
                   onFilesSelected={handleExcelFile}
@@ -997,38 +1005,6 @@ const Index = () => {
                   multiple={false}
                   title="Upload Excel Instructions"
                   description="Excel file with conversion instructions"
-                  files={excelFile}
-                  onRemoveFile={handleRemoveExcelFile}
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="renameword" className="space-y-6">
-            <div className="bg-card rounded-lg p-6 shadow-medium border border-border">
-              <h2 className="text-2xl font-semibold mb-4 text-foreground">
-                Bulk Word File Renaming
-              </h2>
-              <p className="text-muted-foreground mb-6">
-                Upload your Word files and an Excel file with rename instructions. The Excel file should have columns: Old Name and New Name.
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <FileUpload
-                  onFilesSelected={handleWordFiles}
-                  accept=".docx,.doc"
-                  multiple={true}
-                  title="Upload Word Files"
-                  description="Drag & drop or click to select Word documents"
-                  files={wordFiles}
-                  onRemoveFile={handleRemoveWordFile}
-                />
-                <FileUpload
-                  onFilesSelected={handleExcelFile}
-                  accept=".xlsx,.xls"
-                  multiple={false}
-                  title="Upload Excel Instructions"
-                  description="Excel file with rename instructions"
                   files={excelFile}
                   onRemoveFile={handleRemoveExcelFile}
                 />
@@ -1190,16 +1166,27 @@ const Index = () => {
             {/* Rename Template */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-foreground">Rename Template</h4>
-                <Button
-                  onClick={downloadRenameTemplate}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </Button>
+                <h4 className="font-medium text-foreground">Rename Template (PDF/Word)</h4>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={downloadRenameTemplate}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    PDF Template
+                  </Button>
+                  <Button
+                    onClick={downloadRenameWordTemplate}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Word Template
+                  </Button>
+                </div>
               </div>
               <div className="bg-card border border-border rounded-lg p-4">
                 <p className="text-sm text-muted-foreground mb-3">
@@ -1209,10 +1196,11 @@ const Index = () => {
                   <strong className="text-foreground">Example:</strong>
                 </p>
                 <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
-                  document.pdf | renamed_document.pdf
+                  document.pdf | renamed_document.pdf<br />
+                  file.docx | renamed_file.docx
                 </code>
                 <p className="text-sm text-muted-foreground">
-                  Bulk rename PDF files according to your Excel instructions.
+                  Bulk rename PDF or Word files according to your Excel instructions.
                 </p>
               </div>
             </div>
@@ -1277,35 +1265,6 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Rename Word Template */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-foreground">Rename Word Template</h4>
-                <Button
-                  onClick={downloadRenameWordTemplate}
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </Button>
-              </div>
-              <div className="bg-card border border-border rounded-lg p-4">
-                <p className="text-sm text-muted-foreground mb-3">
-                  <strong className="text-foreground">Columns:</strong> Old Name, New Name
-                </p>
-                <p className="text-sm text-muted-foreground mb-3">
-                  <strong className="text-foreground">Example:</strong>
-                </p>
-                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
-                  old-document.docx | new-document.docx
-                </code>
-                <p className="text-sm text-muted-foreground">
-                  Bulk rename Word files according to your Excel instructions.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </main>
