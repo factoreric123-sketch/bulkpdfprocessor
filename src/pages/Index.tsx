@@ -490,7 +490,7 @@ const Index = () => {
           </div>
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              PDF Bulk Processor
+              Bulk PDF Processor
             </h1>
             <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto mb-6">
               Merge multiple PDFs or delete specific pages in bulk using Excel instructions

@@ -12,7 +12,7 @@ export const Footer = () => {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <FileText className="w-6 h-6 text-primary" />
-              <span className="font-bold text-lg">PDF Bulk Processor</span>
+              <span className="font-bold text-lg">Bulk PDF Processor</span>
             </div>
             <p className="text-sm text-muted-foreground">
               Powerful PDF processing made simple. Merge, split, delete, reorder, and rename PDFs in bulk using Excel instructions.
@@ -78,7 +78,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t mt-8 pt-6 text-center text-sm text-muted-foreground">
-          <p>© {currentYear} PDF Bulk Processor. All rights reserved.</p>
+          <p>© {currentYear} Bulk PDF Processor. All rights reserved.</p>
         </div>
       </div>
     </footer>

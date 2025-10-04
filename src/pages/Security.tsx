@@ -41,7 +41,7 @@ const Security = () => {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none dark:prose-invert">
               <p>
-                At PDF Bulk Processor, security is our top priority. We employ industry-standard security 
+                At Bulk PDF Processor, security is our top priority. We employ industry-standard security 
                 measures to protect your files, personal information, and account data. This page outlines 
                 our comprehensive security practices and what you can do to keep your account safe.
               </p>

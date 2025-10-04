@@ -38,7 +38,7 @@ const TermsOfService = () => {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none dark:prose-invert">
               <p>
-                By accessing or using PDF Bulk Processor ("the Service"), you agree to be bound by these 
+                By accessing or using Bulk PDF Processor ("the Service"), you agree to be bound by these 
                 Terms of Service ("Terms"). If you disagree with any part of the terms, you may not access the Service.
               </p>
               <ul>

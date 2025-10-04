@@ -38,7 +38,7 @@ const PrivacyPolicy = () => {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none dark:prose-invert">
               <p>
-                At PDF Bulk Processor, we take your privacy seriously. This Privacy Policy explains how we collect, 
+                At Bulk PDF Processor, we take your privacy seriously. This Privacy Policy explains how we collect, 
                 use, disclose, and safeguard your information when you use our service. Please read this privacy 
                 policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.
               </p>
