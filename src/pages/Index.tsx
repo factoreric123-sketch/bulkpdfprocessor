@@ -4,6 +4,8 @@ import { FileText, Merge, Scissors, Download, FileStack, ArrowDownUp, FileEdit, 
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import wordToPdfIcon from '@/assets/word-to-pdf-icon.png';
+import pdfToWordIcon from '@/assets/pdf-to-word-icon.png';
 import { FileUpload } from '@/components/FileUpload';
 import { ProcessingStatus } from '@/components/ProcessingStatus';
 import { CreditDisplay } from '@/components/CreditDisplay';
@@ -770,11 +772,11 @@ const Index = () => {
               Rename
             </TabsTrigger>
             <TabsTrigger value="wordtopdf" className="flex items-center gap-2">
-              <FileType className="w-4 h-4" />
+              <img src={wordToPdfIcon} alt="Word to PDF" className="w-4 h-4" />
               Word→PDF
             </TabsTrigger>
             <TabsTrigger value="pdftoword" className="flex items-center gap-2">
-              <FileType className="w-4 h-4" />
+              <img src={pdfToWordIcon} alt="PDF to Word" className="w-4 h-4" />
               PDF→Word
             </TabsTrigger>
           </TabsList>
