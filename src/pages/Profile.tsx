@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, credits, isUnlimited } = useCredits();
+  const { user, credits, isUnlimited, isLoading: authLoading } = useCredits();
   const { subscription, openCustomerPortal, isLoading: subLoading } = useSubscription();
   
   const [displayName, setDisplayName] = useState('');
@@ -30,6 +30,7 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       navigate('/auth');
       return;
@@ -65,7 +66,7 @@ const Profile = () => {
     };
 
     loadProfile();
-  }, [user, navigate]);
+  }, [user, navigate, authLoading]);
 
   const handleSaveName = async () => {
     if (!user) return;
@@ -164,7 +165,7 @@ const Profile = () => {
     }
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
