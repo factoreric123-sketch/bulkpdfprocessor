@@ -437,20 +437,20 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <header className="bg-gradient-primary text-primary-foreground py-16 px-4">
+      <header className="bg-gradient-primary text-primary-foreground py-16 px-4 relative z-10">
         <div className="container max-w-6xl mx-auto">
           <div className="flex justify-between items-start mb-8">
             <div className="flex-1" />
             <div className="flex-1 flex justify-center">
               <FileText className="w-16 h-16" />
             </div>
-            <div className="flex-1 flex justify-end gap-2">
+            <div className="flex-1 flex justify-end gap-2 relative z-20">
               {user && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => navigate('/profile')}
-                  className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20"
+                  className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20 cursor-pointer"
                 >
                   <UserCircle className="w-4 h-4" />
                   Profile
@@ -460,7 +460,7 @@ const Index = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate('/subscriptions')}
-                className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20"
+                className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20 cursor-pointer"
               >
                 <CreditCard className="w-4 h-4" />
                 Plans
@@ -470,7 +470,7 @@ const Index = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleLogout}
-                  className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20"
+                  className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20 cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign Out
@@ -480,7 +480,7 @@ const Index = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => navigate('/auth')}
-                  className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20"
+                  className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20 cursor-pointer"
                 >
                   Sign In
                 </Button>
