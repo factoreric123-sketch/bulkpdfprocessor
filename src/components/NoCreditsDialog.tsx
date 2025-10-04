@@ -8,7 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Coins } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 
 interface NoCreditsDialogProps {
   open: boolean;
@@ -26,43 +26,57 @@ export const NoCreditsDialog = ({
   isAuthenticated 
 }: NoCreditsDialogProps) => {
   const navigate = useNavigate();
+  const deficit = requiredCredits - availableCredits;
 
   const handleAction = () => {
-    if (!isAuthenticated) {
-      navigate('/auth');
+    if (isAuthenticated) {
+      navigate('/subscriptions');
     } else {
-      onOpenChange(false);
+      navigate('/auth');
     }
+    onOpenChange(false);
   };
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <div className="flex items-center gap-2 mb-2">
-            <Coins className="w-6 h-6 text-destructive" />
-            <AlertDialogTitle>Insufficient Credits</AlertDialogTitle>
-          </div>
-          <AlertDialogDescription className="space-y-3">
+          <AlertDialogTitle className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5" />
+            Insufficient Credits
+          </AlertDialogTitle>
+          <AlertDialogDescription className="space-y-4">
             <p>
-              This operation requires <strong>{requiredCredits} credit{requiredCredits > 1 ? 's' : ''}</strong>, 
-              but you only have <strong>{availableCredits} credit{availableCredits !== 1 ? 's' : ''}</strong> remaining.
+              This operation requires <strong>{requiredCredits} credits</strong>, but you only
+              have <strong>{availableCredits} credits</strong> available.
             </p>
-            <p className="text-foreground font-medium">
-              {!isAuthenticated && 'Sign in to get more credits or upgrade your account.'}
-              {isAuthenticated && 'Please upgrade your account to continue processing PDFs.'}
+            <p className="text-sm">
+              You need <strong>{deficit} more credit{deficit !== 1 ? 's' : ''}</strong> to
+              complete this operation.
             </p>
-            <div className="bg-muted p-3 rounded-md text-sm">
-              <p className="font-semibold mb-1">What's a credit?</p>
-              <p className="text-muted-foreground">
-                One credit = one PDF processed (one row in your Excel file)
-              </p>
-            </div>
+            {isAuthenticated ? (
+              <div className="bg-primary/10 p-4 rounded-lg border border-primary/20">
+                <p className="font-medium mb-2">Upgrade to a subscription plan to get:</p>
+                <ul className="text-sm space-y-1 ml-4 list-disc">
+                  <li>50-200 credits per month (or unlimited)</li>
+                  <li>All PDF processing operations</li>
+                  <li>Priority support</li>
+                  <li>Advanced features</li>
+                </ul>
+              </div>
+            ) : (
+              <div className="bg-primary/10 p-4 rounded-lg border border-primary/20">
+                <p className="font-medium">Sign in to get more credits!</p>
+                <p className="text-sm mt-1">
+                  Create an account to access subscription plans with monthly credits.
+                </p>
+              </div>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogAction onClick={handleAction}>
-            {isAuthenticated ? 'Got it' : 'Sign In'}
+            {isAuthenticated ? 'View Plans' : 'Sign In'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

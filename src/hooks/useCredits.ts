@@ -118,6 +118,17 @@ export const useCredits = () => {
     return () => authSubscription.unsubscribe();
   }, []);
 
+  // Auto-refresh subscription status every 60 seconds for authenticated users
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(async () => {
+      await checkAndRefreshSubscription(user.id);
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   const loadCreditsFromDB = async (userId: string) => {
     try {
       const { data, error } = await supabase

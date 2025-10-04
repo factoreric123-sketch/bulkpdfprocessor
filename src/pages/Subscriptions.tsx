@@ -2,22 +2,28 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SubscriptionPlans } from '@/components/SubscriptionPlans';
+import { RefreshSubscriptionButton } from '@/components/RefreshSubscriptionButton';
+import { useCredits } from '@/hooks/useCredits';
 
 const Subscriptions = () => {
   const navigate = useNavigate();
+  const { user } = useCredits();
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/')}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+            {user && <RefreshSubscriptionButton />}
+          </div>
         </div>
       </header>
 
