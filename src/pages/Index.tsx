@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileUpload } from '@/components/FileUpload';
 import { ProcessingStatus } from '@/components/ProcessingStatus';
 import { CreditDisplay } from '@/components/CreditDisplay';
+import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { NoCreditsDialog } from '@/components/NoCreditsDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useCredits } from '@/hooks/useCredits';
@@ -502,6 +503,8 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container max-w-6xl mx-auto px-4 py-12">
+        <SubscriptionStatus />
+        
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-5 bg-card shadow-soft">
             <TabsTrigger value="merge" className="flex items-center gap-2">

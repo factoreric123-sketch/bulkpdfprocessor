@@ -92,12 +92,12 @@ serve(async (req) => {
       
       // Map product to plan details
       const planMapping: Record<string, { name: string; credits: number | null }> = {
-        'price_1QdU1eP0e5cWYUQoSg0Q0Q0Q': { name: 'Starter Monthly', credits: 50 },
-        'price_1QdU1fP0e5cWYUQoSg0Q0Q0R': { name: 'Starter Annual', credits: 50 },
-        'price_1QdU1gP0e5cWYUQoSg0Q0Q0S': { name: 'Professional Monthly', credits: 200 },
-        'price_1QdU1hP0e5cWYUQoSg0Q0Q0T': { name: 'Professional Annual', credits: 200 },
-        'price_1QdU1iP0e5cWYUQoSg0Q0Q0U': { name: 'Business Monthly', credits: null },
-        'price_1QdU1jP0e5cWYUQoSg0Q0Q0V': { name: 'Business Annual', credits: null },
+        'price_1QdU1YP0e5cWYUQoC9bkWLJN': { name: 'Starter Monthly', credits: 50 },
+        'price_1QdU1ZP0e5cWYUQo6JhqvHXs': { name: 'Starter Annual', credits: 50 },
+        'price_1QdU1aP0e5cWYUQoK8RVLmBz': { name: 'Professional Monthly', credits: 200 },
+        'price_1QdU1bP0e5cWYUQoZN4gT2Bc': { name: 'Professional Annual', credits: 200 },
+        'price_1QdU1cP0e5cWYUQoMpXyD9Kf': { name: 'Business Monthly', credits: null },
+        'price_1QdU1dP0e5cWYUQoR7sLqW3v': { name: 'Business Annual', credits: null },
       };
       
       const planDetails = planMapping[priceId];
