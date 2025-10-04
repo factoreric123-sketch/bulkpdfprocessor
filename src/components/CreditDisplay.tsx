@@ -14,7 +14,7 @@ export const CreditDisplay = ({ credits, isLoading, planName, isUnlimited }: Cre
   }
 
   return (
-    <div className="flex items-center gap-2 bg-primary-foreground/10 border border-primary-foreground/20 rounded-lg px-4 py-2 text-sm backdrop-blur-sm h-10">
+    <div className="flex items-center gap-2 bg-primary-foreground/10 border border-primary-foreground/20 rounded-lg px-3 py-1.5 text-sm backdrop-blur-sm">
       {isUnlimited ? (
         <>
           <Infinity className="w-4 h-4" />
