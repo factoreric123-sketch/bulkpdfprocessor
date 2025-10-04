@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Merge, Scissors, Download, FileStack, ArrowDownUp, FileEdit, LogOut, CreditCard } from 'lucide-react';
+import { FileText, Merge, Scissors, Download, FileStack, ArrowDownUp, FileEdit, LogOut, CreditCard, UserCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -445,6 +445,17 @@ const Index = () => {
               <FileText className="w-16 h-16" />
             </div>
             <div className="flex-1 flex justify-end gap-2">
+              {user && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/profile')}
+                  className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20"
+                >
+                  <UserCircle className="w-4 h-4" />
+                  Profile
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
