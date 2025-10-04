@@ -446,6 +446,12 @@ const Index = () => {
               <FileText className="w-16 h-16" />
             </div>
             <div className="flex-1 flex justify-end gap-2 relative z-20">
+              <CreditDisplay 
+                credits={credits} 
+                isLoading={creditsLoading} 
+                planName={subscription?.plan_name}
+                isUnlimited={isUnlimited}
+              />
               {user && (
                 <Button
                   variant="outline"
@@ -492,15 +498,9 @@ const Index = () => {
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Bulk PDF Processor
             </h1>
-            <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto mb-6">
+            <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
               Merge multiple PDFs or delete specific pages in bulk using Excel instructions
             </p>
-            <CreditDisplay 
-              credits={credits} 
-              isLoading={creditsLoading} 
-              planName={subscription.plan_name}
-              isUnlimited={isUnlimited}
-            />
           </div>
         </div>
       </header>

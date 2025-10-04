@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Upload, FileText, X } from 'lucide-react';
+import { Upload, FileText, X, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -61,6 +61,10 @@ export const FileUpload = ({
             <h3 className="font-semibold text-foreground">{title}</h3>
             <p className="text-sm text-muted-foreground mt-1">{description}</p>
           </div>
+        </div>
+        <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mt-4">
+          <Lock className="w-3 h-3" />
+          <span>Files stay private</span>
         </div>
       </div>
       
