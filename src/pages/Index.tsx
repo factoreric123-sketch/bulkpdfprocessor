@@ -9,6 +9,7 @@ import { ProcessingStatus } from '@/components/ProcessingStatus';
 import { CreditDisplay } from '@/components/CreditDisplay';
 import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { NoCreditsDialog } from '@/components/NoCreditsDialog';
+import { Footer } from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 import { useCredits } from '@/hooks/useCredits';
 import {
@@ -883,6 +884,8 @@ const Index = () => {
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 };
