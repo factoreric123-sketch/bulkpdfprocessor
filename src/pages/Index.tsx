@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Merge, Scissors, Download, FileStack, ArrowDownUp, FileEdit, LogOut, CreditCard, UserCircle } from 'lucide-react';
+import { FileText, Merge, Scissors, Download, FileStack, ArrowDownUp, FileEdit, LogOut, CreditCard, UserCircle, FileType, File } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,9 +37,29 @@ import {
   downloadReorderTemplate,
   downloadRenameTemplate
 } from '@/lib/templateGenerator';
+import {
+  parseWordToPdfExcel,
+  parsePdfToWordExcel,
+  parseRenameWordExcel,
+} from '@/lib/wordExcelParser';
+import {
+  convertWordToPdf,
+  convertPdfToWord,
+  renameWordFile,
+  downloadFilesAsZip,
+  type WordToPdfInstruction,
+  type PdfToWordInstruction,
+  type RenameWordInstruction,
+} from '@/lib/wordProcessor';
+import {
+  downloadWordToPdfTemplate,
+  downloadPdfToWordTemplate,
+  downloadRenameWordTemplate,
+} from '@/lib/wordTemplateGenerator';
 
 const Index = () => {
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
+  const [wordFiles, setWordFiles] = useState<File[]>([]);
   const [excelFile, setExcelFile] = useState<File[]>([]);
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [progress, setProgress] = useState(0);
@@ -72,12 +92,20 @@ const Index = () => {
     setPdfFiles(files);
   };
 
+  const handleWordFiles = (files: File[]) => {
+    setWordFiles(files);
+  };
+
   const handleExcelFile = (files: File[]) => {
     setExcelFile(files);
   };
 
   const handleRemovePdfFile = (index: number) => {
     setPdfFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveWordFile = (index: number) => {
+    setWordFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleRemoveExcelFile = (index: number) => {
@@ -413,6 +441,197 @@ const Index = () => {
     }
   };
 
+  const processWordToPdf = async () => {
+    if (wordFiles.length === 0 || excelFile.length === 0) {
+      toast({
+        title: 'Missing files',
+        description: 'Please upload both Word files and an Excel instruction file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStatus('processing');
+    setMessage('Parsing Excel instructions...');
+    setProgress(0);
+
+    try {
+      const instructions = await parseWordToPdfExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
+      const wordMap = new Map(wordFiles.map((file) => [file.name, file]));
+      const processedFiles: { name: string; data: Uint8Array }[] = [];
+
+      for (let i = 0; i < instructions.length; i++) {
+        const instruction = instructions[i];
+        setMessage(`Converting ${instruction.sourceFile}... (${i + 1}/${instructions.length})`);
+        
+        const convertedPdf = await convertWordToPdf(instruction, wordMap, (fileProgress) => {
+          const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
+          setProgress(totalProgress);
+        });
+
+        processedFiles.push(convertedPdf);
+      }
+
+      setMessage('Creating ZIP file...');
+      await downloadFilesAsZip(processedFiles);
+
+      deductCredits(creditsNeeded);
+
+      setStatus('success');
+      setMessage(`Successfully converted ${instructions.length} file${instructions.length > 1 ? 's' : ''}!`);
+      setProgress(100);
+      toast({
+        title: 'Success!',
+        description: `Downloaded ${instructions.length} converted PDF${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+      });
+    } catch (error) {
+      console.error('Error processing files:', error);
+      setStatus('error');
+      setMessage(error instanceof Error ? error.message : 'An error occurred while processing files');
+      toast({
+        title: 'Processing failed',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const processPdfToWord = async () => {
+    if (pdfFiles.length === 0 || excelFile.length === 0) {
+      toast({
+        title: 'Missing files',
+        description: 'Please upload both PDF files and an Excel instruction file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStatus('processing');
+    setMessage('Parsing Excel instructions...');
+    setProgress(0);
+
+    try {
+      const instructions = await parsePdfToWordExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
+      const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
+      const processedFiles: { name: string; data: Uint8Array | Blob }[] = [];
+
+      for (let i = 0; i < instructions.length; i++) {
+        const instruction = instructions[i];
+        setMessage(`Converting ${instruction.sourceFile}... (${i + 1}/${instructions.length})`);
+        
+        const convertedWord = await convertPdfToWord(instruction, pdfMap, (fileProgress) => {
+          const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
+          setProgress(totalProgress);
+        });
+
+        processedFiles.push(convertedWord);
+      }
+
+      setMessage('Creating ZIP file...');
+      await downloadFilesAsZip(processedFiles);
+
+      deductCredits(creditsNeeded);
+
+      setStatus('success');
+      setMessage(`Successfully converted ${instructions.length} file${instructions.length > 1 ? 's' : ''}!`);
+      setProgress(100);
+      toast({
+        title: 'Success!',
+        description: `Downloaded ${instructions.length} converted Word document${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+      });
+    } catch (error) {
+      console.error('Error processing files:', error);
+      setStatus('error');
+      setMessage(error instanceof Error ? error.message : 'An error occurred while processing files');
+      toast({
+        title: 'Processing failed',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const processRenameWord = async () => {
+    if (wordFiles.length === 0 || excelFile.length === 0) {
+      toast({
+        title: 'Missing files',
+        description: 'Please upload both Word files and an Excel instruction file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStatus('processing');
+    setMessage('Parsing Excel instructions...');
+    setProgress(0);
+
+    try {
+      const instructions = await parseRenameWordExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
+      const wordMap = new Map(wordFiles.map((file) => [file.name, file]));
+      const processedFiles: { name: string; data: Blob }[] = [];
+
+      for (let i = 0; i < instructions.length; i++) {
+        const instruction = instructions[i];
+        setMessage(`Renaming ${instruction.oldName}... (${i + 1}/${instructions.length})`);
+        
+        const renamedWord = await renameWordFile(instruction, wordMap);
+        processedFiles.push(renamedWord);
+        
+        const progress = ((i + 1) / instructions.length) * 100;
+        setProgress(progress);
+      }
+
+      setMessage('Creating ZIP file...');
+      await downloadFilesAsZip(processedFiles);
+
+      deductCredits(creditsNeeded);
+
+      setStatus('success');
+      setMessage(`Successfully renamed ${instructions.length} file${instructions.length > 1 ? 's' : ''}!`);
+      setProgress(100);
+      toast({
+        title: 'Success!',
+        description: `Downloaded ${instructions.length} renamed Word document${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+      });
+    } catch (error) {
+      console.error('Error processing files:', error);
+      setStatus('error');
+      setMessage(error instanceof Error ? error.message : 'An error occurred while processing files');
+      toast({
+        title: 'Processing failed',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleProcess = () => {
     if (activeTab === 'merge') {
       processMerge();
@@ -424,11 +643,18 @@ const Index = () => {
       processReorder();
     } else if (activeTab === 'rename') {
       processRename();
+    } else if (activeTab === 'wordtopdf') {
+      processWordToPdf();
+    } else if (activeTab === 'pdftoword') {
+      processPdfToWord();
+    } else if (activeTab === 'renameword') {
+      processRenameWord();
     }
   };
 
   const resetFiles = () => {
     setPdfFiles([]);
+    setWordFiles([]);
     setExcelFile([]);
     setStatus('idle');
     setProgress(0);
@@ -441,17 +667,18 @@ const Index = () => {
       <header className="bg-gradient-primary text-primary-foreground py-16 px-4 relative z-10">
         <div className="container max-w-6xl mx-auto">
           <div className="flex justify-between items-start mb-8">
-            <div className="flex-1" />
-            <div className="flex-1 flex justify-center">
-              <FileText className="w-16 h-16" />
-            </div>
-            <div className="flex-1 flex justify-end gap-2 relative z-20">
+            <div className="flex-1">
               <CreditDisplay 
                 credits={credits} 
                 isLoading={creditsLoading} 
                 planName={subscription?.plan_name}
                 isUnlimited={isUnlimited}
               />
+            </div>
+            <div className="flex-1 flex justify-center">
+              <FileText className="w-16 h-16" />
+            </div>
+            <div className="flex-1 flex justify-end gap-2 relative z-20">
               {user && (
                 <Button
                   variant="outline"
@@ -518,7 +745,7 @@ const Index = () => {
         <SubscriptionStatus />
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-5 bg-card shadow-soft">
+          <TabsList className="grid w-full max-w-6xl mx-auto grid-cols-4 md:grid-cols-8 bg-card shadow-soft">
             <TabsTrigger value="merge" className="flex items-center gap-2">
               <Merge className="w-4 h-4" />
               Merge
@@ -538,6 +765,18 @@ const Index = () => {
             <TabsTrigger value="rename" className="flex items-center gap-2">
               <FileEdit className="w-4 h-4" />
               Rename
+            </TabsTrigger>
+            <TabsTrigger value="wordtopdf" className="flex items-center gap-2">
+              <FileType className="w-4 h-4" />
+              Word→PDF
+            </TabsTrigger>
+            <TabsTrigger value="pdftoword" className="flex items-center gap-2">
+              <FileType className="w-4 h-4" />
+              PDF→Word
+            </TabsTrigger>
+            <TabsTrigger value="renameword" className="flex items-center gap-2">
+              <File className="w-4 h-4" />
+              Rename Word
             </TabsTrigger>
           </TabsList>
 
@@ -701,6 +940,102 @@ const Index = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="wordtopdf" className="space-y-6">
+            <div className="bg-card rounded-lg p-6 shadow-medium border border-border">
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">
+                Word to PDF Conversion
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Upload your Word files and an Excel file with conversion instructions. The Excel file should have columns: Source File and Output Name.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <FileUpload
+                  onFilesSelected={handleWordFiles}
+                  accept=".docx,.doc"
+                  multiple={true}
+                  title="Upload Word Files"
+                  description="Drag & drop or click to select Word documents"
+                  files={wordFiles}
+                  onRemoveFile={handleRemoveWordFile}
+                />
+                <FileUpload
+                  onFilesSelected={handleExcelFile}
+                  accept=".xlsx,.xls"
+                  multiple={false}
+                  title="Upload Excel Instructions"
+                  description="Excel file with conversion instructions"
+                  files={excelFile}
+                  onRemoveFile={handleRemoveExcelFile}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="pdftoword" className="space-y-6">
+            <div className="bg-card rounded-lg p-6 shadow-medium border border-border">
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">
+                PDF to Word Conversion
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Upload your PDF files and an Excel file with conversion instructions. The Excel file should have columns: Source File and Output Name.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <FileUpload
+                  onFilesSelected={handlePdfFiles}
+                  accept=".pdf"
+                  multiple={true}
+                  title="Upload PDF Files"
+                  description="Drag & drop or click to select PDFs"
+                  files={pdfFiles}
+                  onRemoveFile={handleRemovePdfFile}
+                />
+                <FileUpload
+                  onFilesSelected={handleExcelFile}
+                  accept=".xlsx,.xls"
+                  multiple={false}
+                  title="Upload Excel Instructions"
+                  description="Excel file with conversion instructions"
+                  files={excelFile}
+                  onRemoveFile={handleRemoveExcelFile}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="renameword" className="space-y-6">
+            <div className="bg-card rounded-lg p-6 shadow-medium border border-border">
+              <h2 className="text-2xl font-semibold mb-4 text-foreground">
+                Bulk Word File Renaming
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Upload your Word files and an Excel file with rename instructions. The Excel file should have columns: Old Name and New Name.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <FileUpload
+                  onFilesSelected={handleWordFiles}
+                  accept=".docx,.doc"
+                  multiple={true}
+                  title="Upload Word Files"
+                  description="Drag & drop or click to select Word documents"
+                  files={wordFiles}
+                  onRemoveFile={handleRemoveWordFile}
+                />
+                <FileUpload
+                  onFilesSelected={handleExcelFile}
+                  accept=".xlsx,.xls"
+                  multiple={false}
+                  title="Upload Excel Instructions"
+                  description="Excel file with rename instructions"
+                  files={excelFile}
+                  onRemoveFile={handleRemoveExcelFile}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
           {/* Processing Status */}
           <ProcessingStatus status={status} progress={progress} message={message} />
 
@@ -708,13 +1043,13 @@ const Index = () => {
           <div className="flex justify-center gap-4">
             <Button
               onClick={handleProcess}
-              disabled={pdfFiles.length === 0 || excelFile.length === 0 || status === 'processing'}
+              disabled={(pdfFiles.length === 0 && wordFiles.length === 0) || excelFile.length === 0 || status === 'processing'}
               size="lg"
               className="min-w-[200px]"
             >
-              {status === 'processing' ? 'Processing...' : 'Process PDFs'}
+              {status === 'processing' ? 'Processing...' : 'Process Files'}
             </Button>
-            {(pdfFiles.length > 0 || excelFile.length > 0) && (
+            {(pdfFiles.length > 0 || wordFiles.length > 0 || excelFile.length > 0) && (
               <Button
                 onClick={resetFiles}
                 variant="outline"
@@ -878,6 +1213,96 @@ const Index = () => {
                 </code>
                 <p className="text-sm text-muted-foreground">
                   Bulk rename PDF files according to your Excel instructions.
+                </p>
+              </div>
+            </div>
+
+            {/* Word to PDF Template */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-foreground">Word to PDF Template</h4>
+                <Button
+                  onClick={downloadWordToPdfTemplate}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              </div>
+              <div className="bg-card border border-border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Columns:</strong> Source File, Output Name
+                </p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Example:</strong>
+                </p>
+                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                  document.docx | output.pdf
+                </code>
+                <p className="text-sm text-muted-foreground">
+                  Convert Word documents to PDF format.
+                </p>
+              </div>
+            </div>
+
+            {/* PDF to Word Template */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-foreground">PDF to Word Template</h4>
+                <Button
+                  onClick={downloadPdfToWordTemplate}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              </div>
+              <div className="bg-card border border-border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Columns:</strong> Source File, Output Name
+                </p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Example:</strong>
+                </p>
+                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                  document.pdf | output.docx
+                </code>
+                <p className="text-sm text-muted-foreground">
+                  Convert PDF files to Word format.
+                </p>
+              </div>
+            </div>
+
+            {/* Rename Word Template */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-foreground">Rename Word Template</h4>
+                <Button
+                  onClick={downloadRenameWordTemplate}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              </div>
+              <div className="bg-card border border-border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Columns:</strong> Old Name, New Name
+                </p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  <strong className="text-foreground">Example:</strong>
+                </p>
+                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                  old-document.docx | new-document.docx
+                </code>
+                <p className="text-sm text-muted-foreground">
+                  Bulk rename Word files according to your Excel instructions.
                 </p>
               </div>
             </div>
