@@ -31,6 +31,9 @@ verify_jwt = true
 [functions.customer-portal]
 verify_jwt = true
 
+[functions.send-contact-email]
+verify_jwt = false
+
 [realtime]
 enabled = true
 ip_version = "ipv4"

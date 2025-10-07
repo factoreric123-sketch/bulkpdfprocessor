@@ -669,7 +669,7 @@ const Index = () => {
       {/* Hero Section */}
       <header className="bg-gradient-primary text-primary-foreground py-16 px-4 relative z-10">
         <div className="container max-w-6xl mx-auto">
-          <div className="flex justify-between items-start mb-8">
+          <div className="flex justify-between items-center mb-8">
             <div className="flex-1">
               <CreditDisplay 
                 credits={credits} 
@@ -729,7 +729,7 @@ const Index = () => {
               Bulk PDF Processor
             </h1>
             <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
-              Merge multiple PDFs or delete specific pages in bulk using Excel instructions
+              Process PDFs and Word documents in bulk - merge, split, delete, reorder, rename, and convert using Excel instructions
             </p>
           </div>
         </div>

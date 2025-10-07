@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useCredits } from '@/hooks/useCredits';
 import { useSubscription } from '@/hooks/useSubscription';
-import { ArrowLeft, User, CreditCard, Shield, Receipt, AlertCircle, Loader2, Mail, Calendar, Coins } from 'lucide-react';
+import { Home, User, CreditCard, Shield, Receipt, AlertCircle, Loader2, Mail, Calendar, Coins } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Profile = () => {
@@ -190,8 +190,8 @@ const Profile = () => {
             onClick={() => navigate('/')}
             className="gap-2"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            <Home className="h-4 w-4" />
+            Home
           </Button>
         </div>
       </header>
