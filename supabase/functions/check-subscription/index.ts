@@ -92,12 +92,12 @@ serve(async (req) => {
       
       // Map product to plan details
       const planMapping: Record<string, { name: string; credits: number | null }> = {
-        'price_1SELSCEREsRLP02zMeqFMs6W': { name: 'Starter Monthly', credits: 50 },
-        'price_1SELSKEREsRLP02zibGLCam9': { name: 'Starter Annual', credits: 50 },
-        'price_1SELSMEREsRLP02zUzXypUZ6': { name: 'Professional Monthly', credits: 200 },
-        'price_1SELSOEREsRLP02z2O6AcmYc': { name: 'Professional Annual', credits: 200 },
-        'price_1SELSPEREsRLP02zU3Jv1kgN': { name: 'Business Monthly', credits: null },
-        'price_1SELSPEREsRLP02zDScEzHB4': { name: 'Business Annual', credits: null },
+        'price_1SFjzJENle41ZznsmkHxGSkf': { name: 'Starter Monthly', credits: 50 },
+        'price_1SFjzKENle41ZznsrawHjDO0': { name: 'Starter Annual', credits: 50 },
+        'price_1SFjzLENle41Zznsx9GYdFr0': { name: 'Professional Monthly', credits: 200 },
+        'price_1SFjzMENle41ZznswKtrTxPR': { name: 'Professional Annual', credits: 200 },
+        'price_1SFjzNENle41ZznsP1Sbgr7L': { name: 'Business Monthly', credits: null },
+        'price_1SFjzOENle41ZznslJ4HYSZ9': { name: 'Business Annual', credits: null },
       };
       
       const planDetails = planMapping[priceId];
