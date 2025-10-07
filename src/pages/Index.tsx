@@ -1039,227 +1039,227 @@ const Index = () => {
         </Tabs>
 
         {/* Templates Section */}
-        <div className="mt-12 bg-muted/50 rounded-lg p-6 border border-border">
-          <h3 className="font-semibold text-lg mb-6 text-foreground">Excel Templates & Instructions</h3>
+        <div className="mt-12 bg-card rounded-lg p-8 shadow-medium border border-border">
+          <h3 className="text-2xl font-semibold text-foreground mb-8">Excel Templates & Instructions</h3>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Merge Template */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-foreground">PDF Merge Template</h4>
+            <div className="border border-border rounded-lg p-5 space-y-3 hover:shadow-lg transition-shadow bg-background">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h4 className="font-semibold text-foreground text-base leading-tight">PDF Merge Template</h4>
                 <Button
                   onClick={downloadMergeTemplate}
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="gap-1.5 shrink-0 h-8 text-xs"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   Download Template
                 </Button>
               </div>
-              <div className="bg-card border border-border rounded-lg p-4">
-                <p className="text-sm text-muted-foreground mb-3">
+              <div className="bg-secondary/50 rounded-md p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Columns:</strong> PDF1, PDF2, PDF3, PDF4, PDF5, New PDF Name
                 </p>
-                <p className="text-sm text-muted-foreground mb-3">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Example Row:</strong>
                 </p>
-                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                <code className="text-[10px] bg-background px-2 py-1 rounded block">
                   part1.pdf | part2.pdf | part3.pdf | part4.pdf | part5.pdf | complete.pdf
                 </code>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Each row merges the listed PDFs into a single output file. Leave cells empty if you need fewer than 5 PDFs.
                 </p>
               </div>
             </div>
 
             {/* Delete Template */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-foreground">Delete Pages Template</h4>
+            <div className="border border-border rounded-lg p-5 space-y-3 hover:shadow-lg transition-shadow bg-background">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h4 className="font-semibold text-foreground text-base leading-tight">Delete Pages Template</h4>
                 <Button
                   onClick={downloadDeleteTemplate}
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="gap-1.5 shrink-0 h-8 text-xs"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   Download Template
                 </Button>
               </div>
-              <div className="bg-card border border-border rounded-lg p-4">
-                <p className="text-sm text-muted-foreground mb-3">
+              <div className="bg-secondary/50 rounded-md p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Columns:</strong> PDF1, Delete Pages, New PDF Name
                 </p>
-                <p className="text-sm text-muted-foreground mb-3">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Example Row:</strong>
                 </p>
-                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                <code className="text-[10px] bg-background px-2 py-1 rounded block">
                   document.pdf | 1,3,5-7 | document_edited.pdf
                 </code>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Specify pages to delete like "1,3,5-7" or "2-4". Use commas for individual pages and hyphens for ranges.
                 </p>
               </div>
             </div>
 
             {/* Split Template */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-foreground">Split Template</h4>
+            <div className="border border-border rounded-lg p-5 space-y-3 hover:shadow-lg transition-shadow bg-background">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h4 className="font-semibold text-foreground text-base leading-tight">Split Template</h4>
                 <Button
                   onClick={downloadSplitTemplate}
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="gap-1.5 shrink-0 h-8 text-xs"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   Download
                 </Button>
               </div>
-              <div className="bg-card border border-border rounded-lg p-4">
-                <p className="text-sm text-muted-foreground mb-3">
+              <div className="bg-secondary/50 rounded-md p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Columns:</strong> PDF File, Page Ranges, Output Names
                 </p>
-                <p className="text-sm text-muted-foreground mb-3">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Example:</strong>
                 </p>
-                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                <code className="text-[10px] bg-background px-2 py-1 rounded block">
                   document.pdf | 1-5, 6-10 | part1.pdf, part2.pdf
                 </code>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Split a PDF into multiple files using page ranges. Each range creates a separate output file.
                 </p>
               </div>
             </div>
 
             {/* Reorder Template */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-foreground">Reorder Template</h4>
+            <div className="border border-border rounded-lg p-5 space-y-3 hover:shadow-lg transition-shadow bg-background">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h4 className="font-semibold text-foreground text-base leading-tight">Reorder Template</h4>
                 <Button
                   onClick={downloadReorderTemplate}
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="gap-1.5 shrink-0 h-8 text-xs"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   Download
                 </Button>
               </div>
-              <div className="bg-card border border-border rounded-lg p-4">
-                <p className="text-sm text-muted-foreground mb-3">
+              <div className="bg-secondary/50 rounded-md p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Columns:</strong> PDF File, New Page Order, Output Name
                 </p>
-                <p className="text-sm text-muted-foreground mb-3">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Example:</strong>
                 </p>
-                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                <code className="text-[10px] bg-background px-2 py-1 rounded block">
                   document.pdf | 5,2,1-3,6 | reordered.pdf
                 </code>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Rearrange pages in a PDF. Use numbers for individual pages and ranges like "1-3".
                 </p>
               </div>
             </div>
 
             {/* Rename Template */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-foreground">Rename Template (PDF/Word)</h4>
-                <div className="flex gap-2">
+            <div className="border border-border rounded-lg p-5 space-y-3 hover:shadow-lg transition-shadow bg-background">
+              <div className="space-y-2 mb-2">
+                <h4 className="font-semibold text-foreground text-base leading-tight">Rename Template (PDF/Word)</h4>
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     onClick={downloadRenameTemplate}
                     variant="outline"
                     size="sm"
-                    className="gap-2"
+                    className="gap-1.5 h-8 text-xs"
                   >
-                    <Download className="w-4 h-4" />
+                    <Download className="w-3.5 h-3.5" />
                     PDF Template
                   </Button>
                   <Button
                     onClick={downloadRenameWordTemplate}
                     variant="outline"
                     size="sm"
-                    className="gap-2"
+                    className="gap-1.5 h-8 text-xs"
                   >
-                    <Download className="w-4 h-4" />
+                    <Download className="w-3.5 h-3.5" />
                     Word Template
                   </Button>
                 </div>
               </div>
-              <div className="bg-card border border-border rounded-lg p-4">
-                <p className="text-sm text-muted-foreground mb-3">
+              <div className="bg-secondary/50 rounded-md p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Columns:</strong> Old File Name, New File Name
                 </p>
-                <p className="text-sm text-muted-foreground mb-3">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Example:</strong>
                 </p>
-                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                <code className="text-[10px] bg-background px-2 py-1 rounded block">
                   document.pdf | renamed_document.pdf<br />
                   file.docx | renamed_file.docx
                 </code>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Bulk rename PDF or Word files according to your Excel instructions.
                 </p>
               </div>
             </div>
 
             {/* Word to PDF Template */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-foreground">Word to PDF Template</h4>
+            <div className="border border-border rounded-lg p-5 space-y-3 hover:shadow-lg transition-shadow bg-background">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h4 className="font-semibold text-foreground text-base leading-tight">Word to PDF Template</h4>
                 <Button
                   onClick={downloadWordToPdfTemplate}
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="gap-1.5 shrink-0 h-8 text-xs"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   Download
                 </Button>
               </div>
-              <div className="bg-card border border-border rounded-lg p-4">
-                <p className="text-sm text-muted-foreground mb-3">
+              <div className="bg-secondary/50 rounded-md p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Columns:</strong> Source File, Output Name
                 </p>
-                <p className="text-sm text-muted-foreground mb-3">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Example:</strong>
                 </p>
-                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                <code className="text-[10px] bg-background px-2 py-1 rounded block">
                   document.docx | output.pdf
                 </code>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Convert Word documents to PDF format.
                 </p>
               </div>
             </div>
 
             {/* PDF to Word Template */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-foreground">PDF to Word Template</h4>
+            <div className="border border-border rounded-lg p-5 space-y-3 hover:shadow-lg transition-shadow bg-background">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h4 className="font-semibold text-foreground text-base leading-tight">PDF to Word Template</h4>
                 <Button
                   onClick={downloadPdfToWordTemplate}
                   variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="gap-1.5 shrink-0 h-8 text-xs"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   Download
                 </Button>
               </div>
-              <div className="bg-card border border-border rounded-lg p-4">
-                <p className="text-sm text-muted-foreground mb-3">
+              <div className="bg-secondary/50 rounded-md p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Columns:</strong> Source File, Output Name
                 </p>
-                <p className="text-sm text-muted-foreground mb-3">
+                <p className="text-xs text-muted-foreground">
                   <strong className="text-foreground">Example:</strong>
                 </p>
-                <code className="text-xs bg-secondary px-2 py-1 rounded block mb-3">
+                <code className="text-[10px] bg-background px-2 py-1 rounded block">
                   document.pdf | output.docx
                 </code>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Convert PDF files to Word format.
                 </p>
               </div>
