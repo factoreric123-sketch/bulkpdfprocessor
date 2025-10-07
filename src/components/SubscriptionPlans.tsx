@@ -22,8 +22,8 @@ const plans: Plan[] = [
     name: "Starter",
     monthlyPrice: "$9",
     annualPrice: "$69",
-    monthlyPriceId: "price_1QdU1YP0e5cWYUQoC9bkWLJN",
-    annualPriceId: "price_1QdU1ZP0e5cWYUQo6JhqvHXs",
+    monthlyPriceId: "price_1SELSCEREsRLP02zMeqFMs6W",
+    annualPriceId: "price_1SELSKEREsRLP02zibGLCam9",
     credits: "50 credits/month",
     features: [
       "50 PDF processing credits per month",
@@ -36,8 +36,8 @@ const plans: Plan[] = [
     name: "Professional",
     monthlyPrice: "$29",
     annualPrice: "$199",
-    monthlyPriceId: "price_1QdU1aP0e5cWYUQoK8RVLmBz",
-    annualPriceId: "price_1QdU1bP0e5cWYUQoZN4gT2Bc",
+    monthlyPriceId: "price_1SELSMEREsRLP02zUzXypUZ6",
+    annualPriceId: "price_1SELSOEREsRLP02z2O6AcmYc",
     credits: "200 credits/month",
     features: [
       "200 PDF processing credits per month",
@@ -52,8 +52,8 @@ const plans: Plan[] = [
     name: "Business",
     monthlyPrice: "$79",
     annualPrice: "$599",
-    monthlyPriceId: "price_1QdU1cP0e5cWYUQoMpXyD9Kf",
-    annualPriceId: "price_1QdU1dP0e5cWYUQoR7sLqW3v",
+    monthlyPriceId: "price_1SELSPEREsRLP02zU3Jv1kgN",
+    annualPriceId: "price_1SELSPEREsRLP02zDScEzHB4",
     credits: "Unlimited credits",
     features: [
       "Unlimited PDF processing credits",
