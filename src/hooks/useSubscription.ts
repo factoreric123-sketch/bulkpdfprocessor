@@ -89,8 +89,13 @@ export const useSubscription = () => {
 
   const createCheckout = async (priceId: string): Promise<string | null> => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) headers["Authorization"] = `Bearer ${session.access_token}`;
+
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId },
+        headers,
       });
 
       if (error) throw error;
@@ -100,7 +105,6 @@ export const useSubscription = () => {
       return null;
     }
   };
-
   const openCustomerPortal = async (): Promise<string | null> => {
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal');

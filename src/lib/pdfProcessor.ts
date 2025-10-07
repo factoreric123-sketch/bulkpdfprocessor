@@ -179,7 +179,8 @@ export const deletePagesFromPDF = async (
 };
 
 export const downloadPDF = (pdfBytes: Uint8Array, fileName: string) => {
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const arrayBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
+  const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
   saveAs(blob, fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`);
 };
 
