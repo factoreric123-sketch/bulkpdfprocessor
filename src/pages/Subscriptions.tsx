@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SubscriptionPlans } from '@/components/SubscriptionPlans';
 import { RefreshSubscriptionButton } from '@/components/RefreshSubscriptionButton';
@@ -19,8 +19,8 @@ const Subscriptions = () => {
               onClick={() => navigate('/')}
               className="gap-2"
             >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
+              <Home className="h-5 w-5" />
+              Home
             </Button>
             {user && <RefreshSubscriptionButton />}
           </div>
