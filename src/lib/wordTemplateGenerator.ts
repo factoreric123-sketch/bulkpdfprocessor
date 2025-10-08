@@ -9,6 +9,18 @@ export const downloadWordToPdfTemplate = () => {
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(template);
+  
+  // Format all cells as text to prevent Excel auto-conversion
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+      if (ws[cell_address]) {
+        ws[cell_address].t = 's'; // Force text format
+      }
+    }
+  }
+  
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Word to PDF');
 
@@ -25,6 +37,18 @@ export const downloadPdfToWordTemplate = () => {
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(template);
+  
+  // Format all cells as text to prevent Excel auto-conversion
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+      if (ws[cell_address]) {
+        ws[cell_address].t = 's'; // Force text format
+      }
+    }
+  }
+  
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'PDF to Word');
 
@@ -41,6 +65,18 @@ export const downloadRenameWordTemplate = () => {
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(template);
+  
+  // Format all cells as text to prevent Excel auto-conversion
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+      if (ws[cell_address]) {
+        ws[cell_address].t = 's'; // Force text format
+      }
+    }
+  }
+  
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Rename Word');
 

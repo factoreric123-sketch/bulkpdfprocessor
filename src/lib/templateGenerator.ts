@@ -8,6 +8,18 @@ export const downloadMergeTemplate = () => {
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(data);
+  
+  // Format all cells as text to prevent Excel auto-conversion
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+      if (ws[cell_address]) {
+        ws[cell_address].t = 's'; // Force text format
+      }
+    }
+  }
+  
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Merge Instructions');
   
@@ -22,6 +34,18 @@ export const downloadDeleteTemplate = () => {
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(data);
+  
+  // Format all cells as text to prevent Excel auto-conversion
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+      if (ws[cell_address]) {
+        ws[cell_address].t = 's'; // Force text format
+      }
+    }
+  }
+  
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Delete Instructions');
   
@@ -36,6 +60,18 @@ export const downloadSplitTemplate = () => {
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(data);
+  
+  // Format all cells as text to prevent Excel auto-conversion
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+      if (ws[cell_address]) {
+        ws[cell_address].t = 's'; // Force text format
+      }
+    }
+  }
+  
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Split Instructions');
   
@@ -50,6 +86,18 @@ export const downloadReorderTemplate = () => {
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(data);
+  
+  // Format all cells as text to prevent Excel auto-conversion
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+      if (ws[cell_address]) {
+        ws[cell_address].t = 's'; // Force text format
+      }
+    }
+  }
+  
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Reorder Instructions');
   
@@ -64,6 +112,18 @@ export const downloadRenameTemplate = () => {
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(data);
+  
+  // Format all cells as text to prevent Excel auto-conversion
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+      if (ws[cell_address]) {
+        ws[cell_address].t = 's'; // Force text format
+      }
+    }
+  }
+  
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Rename Instructions');
   
