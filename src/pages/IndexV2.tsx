@@ -35,29 +35,9 @@ import {
   downloadReorderTemplate,
   downloadRenameTemplate
 } from '@/lib/templateGenerator';
-import {
-  parseWordToPdfExcel,
-  parsePdfToWordExcel,
-  parseRenameWordExcel,
-} from '@/lib/wordExcelParser';
-import {
-  convertWordToPdf,
-  convertPdfToWord,
-  renameWordFile,
-  downloadFilesAsZip,
-  type WordToPdfInstruction,
-  type PdfToWordInstruction,
-  type RenameWordInstruction,
-} from '@/lib/wordProcessor';
-import {
-  downloadWordToPdfTemplate,
-  downloadPdfToWordTemplate,
-  downloadRenameWordTemplate,
-} from '@/lib/wordTemplateGenerator';
 
 const IndexV2 = () => {
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
-  const [wordFiles, setWordFiles] = useState<File[]>([]);
   const [excelFile, setExcelFile] = useState<File[]>([]);
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [progress, setProgress] = useState(0);
@@ -92,20 +72,12 @@ const IndexV2 = () => {
     setPdfFiles(files);
   };
 
-  const handleWordFiles = (files: File[]) => {
-    setWordFiles(files);
-  };
-
   const handleExcelFile = (files: File[]) => {
     setExcelFile(files);
   };
 
   const handleRemovePdfFile = (index: number) => {
     setPdfFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleRemoveWordFile = (index: number) => {
-    setWordFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleRemoveExcelFile = (index: number) => {
@@ -209,8 +181,8 @@ const IndexV2 = () => {
     }
   };
 
-  // ... rest of the component code remains the same as original Index.tsx ...
-  // (processDeletePages, processSplit, processReorder, processRename, processWordToPdf, etc.)
+  // Note: Other processing functions (processDeletePages, processSplit, processReorder, processRename) 
+  // would need to be implemented here following the same pattern as processMerge
 
   return (
     <div className="min-h-screen bg-background">
@@ -296,10 +268,6 @@ const IndexV2 = () => {
             <TabsTrigger value="rename" className="flex items-center gap-1">
               <FileEdit className="h-4 w-4" />
               <span className="hidden sm:inline">Rename</span>
-            </TabsTrigger>
-            <TabsTrigger value="convert" className="flex items-center gap-1">
-              <FileType className="h-4 w-4" />
-              <span className="hidden sm:inline">Convert</span>
             </TabsTrigger>
           </TabsList>
 

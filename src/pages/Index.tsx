@@ -39,29 +39,9 @@ import {
   downloadReorderTemplate,
   downloadRenameTemplate
 } from '@/lib/templateGenerator';
-import {
-  parseWordToPdfExcel,
-  parsePdfToWordExcel,
-  parseRenameWordExcel,
-} from '@/lib/wordExcelParser';
-import {
-  convertWordToPdf,
-  convertPdfToWord,
-  renameWordFile,
-  downloadFilesAsZip,
-  type WordToPdfInstruction,
-  type PdfToWordInstruction,
-  type RenameWordInstruction,
-} from '@/lib/wordProcessor';
-import {
-  downloadWordToPdfTemplate,
-  downloadPdfToWordTemplate,
-  downloadRenameWordTemplate,
-} from '@/lib/wordTemplateGenerator';
 
 const Index = () => {
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
-  const [wordFiles, setWordFiles] = useState<File[]>([]);
   const [excelFile, setExcelFile] = useState<File[]>([]);
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [progress, setProgress] = useState(0);
@@ -96,20 +76,12 @@ const Index = () => {
     setPdfFiles(files);
   };
 
-  const handleWordFiles = (files: File[]) => {
-    setWordFiles(files);
-  };
-
   const handleExcelFile = (files: File[]) => {
     setExcelFile(files);
   };
 
   const handleRemovePdfFile = (index: number) => {
     setPdfFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleRemoveWordFile = (index: number) => {
-    setWordFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleRemoveExcelFile = (index: number) => {
@@ -571,343 +543,6 @@ const Index = () => {
     }
   };
 
-  const processWordToPdf = async () => {
-    if (wordFiles.length === 0 || excelFile.length === 0) {
-      toast({
-        title: 'Missing files',
-        description: 'Please upload both Word files and an Excel instruction file.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setStatus('processing');
-    setMessage('Parsing Excel instructions...');
-    setProgress(0);
-
-    try {
-      const instructions = await parseWordToPdfExcel(excelFile[0]);
-      const creditsNeeded = instructions.length;
-
-      if (!hasCredits(creditsNeeded)) {
-        setRequiredCredits(creditsNeeded);
-        setShowNoCreditsDialog(true);
-        setStatus('idle');
-        return;
-      }
-
-      // Upload files to storage
-      setMessage('Uploading Word files...');
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const userId = session.user.id;
-      
-      for (let i = 0; i < wordFiles.length; i++) {
-        const file = wordFiles[i];
-        const path = `${userId}/${file.name}`;
-        
-        const { error: uploadErr } = await supabase.storage
-          .from('pdf-uploads')
-          .upload(path, file, { upsert: true });
-        
-        if (uploadErr) {
-          logger.error('Upload error:', uploadErr);
-          throw new Error(`Failed to upload ${file.name}: ${uploadErr.message}`);
-        }
-        
-        setProgress((i + 1) / wordFiles.length * 20);
-      }
-
-      // Start server-side processing
-      setMessage('Starting conversion...');
-      const { data: jobData, error: jobErr } = await supabase.functions.invoke('process-word-batch', {
-        body: { operation: 'word-to-pdf', instructions },
-      });
-
-      if (jobErr) throw jobErr;
-      const jobId = jobData.jobId;
-
-      // Poll for job status
-      let completed = false;
-      let pollAttempts = 0;
-      const maxPollAttempts = 900; // 30 minutes max (900 * 2000ms)
-      
-      while (!completed) {
-        pollAttempts++;
-        
-        if (pollAttempts >= maxPollAttempts) {
-          throw new Error('Processing timeout - job took too long');
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const { data: job, error: jobFetchErr } = await supabase
-          .from('processing_jobs')
-          .select('*')
-          .eq('id', jobId)
-          .single();
-
-        if (jobFetchErr) throw jobFetchErr;
-
-        const jobProgress = job.total > 0 ? (job.processed / job.total) * 80 + 20 : 20;
-        setProgress(jobProgress);
-        setMessage(`Converting files... (${job.processed}/${job.total})`);
-
-        if (job.status === 'completed') {
-          completed = true;
-          
-          // Download result ZIP
-          const { data: signedUrlData } = await supabase.storage
-            .from('pdf-results')
-            .createSignedUrl(job.result_path, 60);
-          
-          if (signedUrlData?.signedUrl) {
-            const link = document.createElement('a');
-            link.href = signedUrlData.signedUrl;
-            link.download = 'word-to-pdf-result.zip';
-            link.click();
-          }
-
-          deductCredits(creditsNeeded);
-
-          const errors = Array.isArray(job.errors) ? job.errors as string[] : [];
-          if (errors.length > 0) {
-            setErrorReport({
-              successful: job.total - errors.length,
-              failed: errors,
-            });
-          }
-
-          setStatus('success');
-          const successCount = job.total - errors.length;
-          setMessage(`Successfully converted ${successCount} file${successCount !== 1 ? 's' : ''}!`);
-          setProgress(100);
-          toast({
-            title: 'Success!',
-            description: `Downloaded converted PDFs as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
-          });
-        } else if (job.status === 'failed') {
-          throw new Error(job.errors?.[0] || 'Processing failed');
-        }
-      }
-
-      // Cleanup uploaded files
-      for (const file of wordFiles) {
-        await supabase.storage.from('pdf-uploads').remove([`${userId}/${file.name}`]);
-      }
-    } catch (error) {
-      logger.error('Error processing files:', error);
-      setStatus('error');
-      setMessage(error instanceof Error ? error.message : 'An error occurred while processing files');
-      toast({
-        title: 'Processing failed',
-        description: error instanceof Error ? error.message : 'An error occurred',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const processPdfToWord = async () => {
-    if (pdfFiles.length === 0 || excelFile.length === 0) {
-      toast({
-        title: 'Missing files',
-        description: 'Please upload both PDF files and an Excel instruction file.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setStatus('processing');
-    setMessage('Parsing Excel instructions...');
-    setProgress(0);
-
-    try {
-      const instructions = await parsePdfToWordExcel(excelFile[0]);
-      const creditsNeeded = instructions.length;
-
-      if (!hasCredits(creditsNeeded)) {
-        setRequiredCredits(creditsNeeded);
-        setShowNoCreditsDialog(true);
-        setStatus('idle');
-        return;
-      }
-
-      // Upload files to storage
-      setMessage('Uploading PDF files...');
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
-      const userId = session.user.id;
-      
-      for (let i = 0; i < pdfFiles.length; i++) {
-        const file = pdfFiles[i];
-        const path = `${userId}/${file.name}`;
-        
-        const { error: uploadErr } = await supabase.storage
-          .from('pdf-uploads')
-          .upload(path, file, { upsert: true });
-        
-        if (uploadErr) {
-          logger.error('Upload error:', uploadErr);
-          throw new Error(`Failed to upload ${file.name}: ${uploadErr.message}`);
-        }
-        
-        setProgress((i + 1) / pdfFiles.length * 20);
-      }
-
-      // Start server-side processing
-      setMessage('Starting conversion...');
-      const { data: jobData, error: jobErr } = await supabase.functions.invoke('process-word-batch', {
-        body: { operation: 'pdf-to-word', instructions },
-      });
-
-      if (jobErr) throw jobErr;
-      const jobId = jobData.jobId;
-
-      // Poll for job status
-      let completed = false;
-      let pollAttempts = 0;
-      const maxPollAttempts = 900; // 30 minutes max (900 * 2000ms)
-      
-      while (!completed) {
-        pollAttempts++;
-        
-        if (pollAttempts >= maxPollAttempts) {
-          throw new Error('Processing timeout - job took too long');
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const { data: job, error: jobFetchErr } = await supabase
-          .from('processing_jobs')
-          .select('*')
-          .eq('id', jobId)
-          .single();
-
-        if (jobFetchErr) throw jobFetchErr;
-
-        const jobProgress = job.total > 0 ? (job.processed / job.total) * 80 + 20 : 20;
-        setProgress(jobProgress);
-        setMessage(`Converting files... (${job.processed}/${job.total})`);
-
-        if (job.status === 'completed') {
-          completed = true;
-          
-          // Download result ZIP
-          const { data: signedUrlData } = await supabase.storage
-            .from('pdf-results')
-            .createSignedUrl(job.result_path, 60);
-          
-          if (signedUrlData?.signedUrl) {
-            const link = document.createElement('a');
-            link.href = signedUrlData.signedUrl;
-            link.download = 'pdf-to-word-result.zip';
-            link.click();
-          }
-
-          deductCredits(creditsNeeded);
-
-          const errors = Array.isArray(job.errors) ? job.errors as string[] : [];
-          if (errors.length > 0) {
-            setErrorReport({
-              successful: job.total - errors.length,
-              failed: errors,
-            });
-          }
-
-          setStatus('success');
-          const successCount = job.total - errors.length;
-          setMessage(`Successfully converted ${successCount} file${successCount !== 1 ? 's' : ''}!`);
-          setProgress(100);
-          toast({
-            title: 'Success!',
-            description: `Downloaded converted Word documents as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
-          });
-        } else if (job.status === 'failed') {
-          throw new Error(job.errors?.[0] || 'Processing failed');
-        }
-      }
-
-      // Cleanup uploaded files
-      for (const file of pdfFiles) {
-        await supabase.storage.from('pdf-uploads').remove([`${userId}/${file.name}`]);
-      }
-    } catch (error) {
-      logger.error('Error processing files:', error);
-      setStatus('error');
-      setMessage(error instanceof Error ? error.message : 'An error occurred while processing files');
-      toast({
-        title: 'Processing failed',
-        description: error instanceof Error ? error.message : 'An error occurred',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const processRenameWord = async () => {
-    if (wordFiles.length === 0 || excelFile.length === 0) {
-      toast({
-        title: 'Missing files',
-        description: 'Please upload both Word files and an Excel instruction file.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setStatus('processing');
-    setMessage('Parsing Excel instructions...');
-    setProgress(0);
-
-    try {
-      const instructions = await parseRenameWordExcel(excelFile[0]);
-      const creditsNeeded = instructions.length;
-
-      if (!hasCredits(creditsNeeded)) {
-        setRequiredCredits(creditsNeeded);
-        setShowNoCreditsDialog(true);
-        setStatus('idle');
-        return;
-      }
-
-      const wordMap = new Map(wordFiles.map((file) => [file.name, file]));
-      const processedFiles: { name: string; data: Blob }[] = [];
-
-      for (let i = 0; i < instructions.length; i++) {
-        const instruction = instructions[i];
-        setMessage(`Renaming ${instruction.oldName}... (${i + 1}/${instructions.length})`);
-        
-        const renamedWord = await renameWordFile(instruction, wordMap);
-        processedFiles.push(renamedWord);
-        
-        const progress = ((i + 1) / instructions.length) * 100;
-        setProgress(progress);
-      }
-
-      setMessage('Creating ZIP file...');
-      await downloadFilesAsZip(processedFiles);
-
-      deductCredits(creditsNeeded);
-
-      setStatus('success');
-      setMessage(`Successfully renamed ${instructions.length} file${instructions.length > 1 ? 's' : ''}!`);
-      setProgress(100);
-      toast({
-        title: 'Success!',
-        description: `Downloaded ${instructions.length} renamed Word document${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
-      });
-    } catch (error) {
-      logger.error('Error processing files:', error);
-      setStatus('error');
-      setMessage(error instanceof Error ? error.message : 'An error occurred while processing files');
-      toast({
-        title: 'Processing failed',
-        description: error instanceof Error ? error.message : 'An error occurred',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleProcess = () => {
     if (activeTab === 'merge') {
       processMerge();
@@ -918,22 +553,12 @@ const Index = () => {
     } else if (activeTab === 'reorder') {
       processReorder();
     } else if (activeTab === 'rename') {
-      // Handle both PDF and Word renaming in the same tab
-      if (pdfFiles.length > 0) {
-        processRename();
-      } else if (wordFiles.length > 0) {
-        processRenameWord();
-      }
-    } else if (activeTab === 'wordtopdf') {
-      processWordToPdf();
-    } else if (activeTab === 'pdftoword') {
-      processPdfToWord();
+      processRename();
     }
   };
 
   const resetFiles = () => {
     setPdfFiles([]);
-    setWordFiles([]);
     setExcelFile([]);
     setStatus('idle');
     setProgress(0);
@@ -1017,7 +642,7 @@ const Index = () => {
               Bulk PDF Processor
             </h1>
             <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
-              Process PDFs and Word documents in bulk - merge, split, delete, reorder, rename, and convert using Excel instructions
+              Process PDFs in bulk - merge, split, delete pages, reorder, and rename using Excel instructions
             </p>
           </div>
         </div>
@@ -1036,7 +661,7 @@ const Index = () => {
         <SubscriptionStatus />
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full max-w-6xl mx-auto grid-cols-4 md:grid-cols-7 bg-card shadow-soft">
+          <TabsList className="grid w-full max-w-6xl mx-auto grid-cols-5 bg-card shadow-soft">
             <TabsTrigger value="merge" className="flex items-center gap-2">
               <Merge className="w-4 h-4" />
               Merge
@@ -1056,14 +681,6 @@ const Index = () => {
             <TabsTrigger value="rename" className="flex items-center gap-2">
               <FileEdit className="w-4 h-4" />
               Rename
-            </TabsTrigger>
-            <TabsTrigger value="wordtopdf" className="flex items-center gap-2">
-              <FileType className="w-4 h-4" />
-              Word→PDF
-            </TabsTrigger>
-            <TabsTrigger value="pdftoword" className="flex items-center gap-2">
-              <FileType className="w-4 h-4" />
-              PDF→Word
             </TabsTrigger>
           </TabsList>
 
@@ -1198,83 +815,10 @@ const Index = () => {
           <TabsContent value="rename" className="space-y-6">
             <div className="bg-card rounded-lg p-6 shadow-medium border border-border">
               <h2 className="text-2xl font-semibold mb-4 text-foreground">
-                Bulk File Renaming
+                Bulk PDF Renaming
               </h2>
               <p className="text-muted-foreground mb-6">
-                Upload your PDF or Word files and an Excel file with rename instructions. The Excel file should have columns: Old File Name and New File Name.
-              </p>
-
-              <div className="grid md:grid-cols-3 gap-6">
-                <FileUpload
-                  onFilesSelected={handlePdfFiles}
-                  accept=".pdf"
-                  multiple={true}
-                  title="Upload PDF Files (Optional)"
-                  description="Drag & drop or click to select PDFs"
-                  files={pdfFiles}
-                  onRemoveFile={handleRemovePdfFile}
-                />
-                <FileUpload
-                  onFilesSelected={handleWordFiles}
-                  accept=".docx,.doc"
-                  multiple={true}
-                  title="Upload Word Files (Optional)"
-                  description="Drag & drop or click to select Word files"
-                  files={wordFiles}
-                  onRemoveFile={handleRemoveWordFile}
-                />
-                <FileUpload
-                  onFilesSelected={handleExcelFile}
-                  accept=".xlsx,.xls"
-                  multiple={false}
-                  title="Upload Excel Instructions"
-                  description="Excel file with rename instructions"
-                  files={excelFile}
-                  onRemoveFile={handleRemoveExcelFile}
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="wordtopdf" className="space-y-6">
-            <div className="bg-card rounded-lg p-6 shadow-medium border border-border">
-              <h2 className="text-2xl font-semibold mb-4 text-foreground">
-                Word to PDF Conversion
-              </h2>
-              <p className="text-muted-foreground mb-6">
-                Upload your Word files and an Excel file with conversion instructions. The Excel file should have columns: Source File and Output Name.
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <FileUpload
-                  onFilesSelected={handleWordFiles}
-                  accept=".docx,.doc"
-                  multiple={true}
-                  title="Upload Word Files"
-                  description="Drag & drop or click to select Word documents"
-                  files={wordFiles}
-                  onRemoveFile={handleRemoveWordFile}
-                />
-                <FileUpload
-                  onFilesSelected={handleExcelFile}
-                  accept=".xlsx,.xls"
-                  multiple={false}
-                  title="Upload Excel Instructions"
-                  description="Excel file with conversion instructions"
-                  files={excelFile}
-                  onRemoveFile={handleRemoveExcelFile}
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="pdftoword" className="space-y-6">
-            <div className="bg-card rounded-lg p-6 shadow-medium border border-border">
-              <h2 className="text-2xl font-semibold mb-4 text-foreground">
-                PDF to Word Conversion
-              </h2>
-              <p className="text-muted-foreground mb-6">
-                Upload your PDF files and an Excel file with conversion instructions. The Excel file should have columns: Source File and Output Name.
+                Upload your PDF files and an Excel file with rename instructions. The Excel file should have columns: Old File Name and New File Name.
               </p>
 
               <div className="grid md:grid-cols-2 gap-6">
@@ -1292,7 +836,7 @@ const Index = () => {
                   accept=".xlsx,.xls"
                   multiple={false}
                   title="Upload Excel Instructions"
-                  description="Excel file with conversion instructions"
+                  description="Excel file with rename instructions"
                   files={excelFile}
                   onRemoveFile={handleRemoveExcelFile}
                 />
@@ -1316,13 +860,13 @@ const Index = () => {
           <div className="flex justify-center gap-4">
             <Button
               onClick={handleProcess}
-              disabled={(pdfFiles.length === 0 && wordFiles.length === 0) || excelFile.length === 0 || status === 'processing'}
+              disabled={pdfFiles.length === 0 || excelFile.length === 0 || status === 'processing'}
               size="lg"
               className="min-w-[200px]"
             >
               {status === 'processing' ? 'Processing...' : 'Process Files'}
             </Button>
-            {(pdfFiles.length > 0 || wordFiles.length > 0 || excelFile.length > 0) && (
+            {(pdfFiles.length > 0 || excelFile.length > 0) && (
               <Button
                 onClick={resetFiles}
                 variant="outline"
@@ -1462,28 +1006,17 @@ const Index = () => {
 
             {/* Rename Template */}
             <div className="border border-border rounded-lg p-5 space-y-3 hover:shadow-lg transition-shadow bg-background">
-              <div className="space-y-2 mb-2">
-                <h4 className="font-semibold text-foreground text-base leading-tight">Rename Template (PDF/Word)</h4>
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    onClick={downloadRenameTemplate}
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 h-8 text-xs"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    PDF Template
-                  </Button>
-                  <Button
-                    onClick={downloadRenameWordTemplate}
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 h-8 text-xs"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    Word Template
-                  </Button>
-                </div>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h4 className="font-semibold text-foreground text-base leading-tight">Rename Template</h4>
+                <Button
+                  onClick={downloadRenameTemplate}
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 shrink-0 h-8 text-xs"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Download
+                </Button>
               </div>
               <div className="bg-secondary/50 rounded-md p-3 space-y-2">
                 <p className="text-xs text-muted-foreground">
@@ -1493,71 +1026,10 @@ const Index = () => {
                   <strong className="text-foreground">Example:</strong>
                 </p>
                 <code className="text-[10px] bg-background px-2 py-1 rounded block">
-                  document.pdf | renamed_document.pdf<br />
-                  file.docx | renamed_file.docx
+                  document.pdf | renamed_document.pdf
                 </code>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Bulk rename PDF or Word files according to your Excel instructions.
-                </p>
-              </div>
-            </div>
-
-            {/* Word to PDF Template */}
-            <div className="border border-border rounded-lg p-5 space-y-3 hover:shadow-lg transition-shadow bg-background">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <h4 className="font-semibold text-foreground text-base leading-tight">Word to PDF Template</h4>
-                <Button
-                  onClick={downloadWordToPdfTemplate}
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 shrink-0 h-8 text-xs"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Download
-                </Button>
-              </div>
-              <div className="bg-secondary/50 rounded-md p-3 space-y-2">
-                <p className="text-xs text-muted-foreground">
-                  <strong className="text-foreground">Columns:</strong> Source File, Output Name
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  <strong className="text-foreground">Example:</strong>
-                </p>
-                <code className="text-[10px] bg-background px-2 py-1 rounded block">
-                  document.docx | output.pdf
-                </code>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Convert Word documents to PDF format.
-                </p>
-              </div>
-            </div>
-
-            {/* PDF to Word Template */}
-            <div className="border border-border rounded-lg p-5 space-y-3 hover:shadow-lg transition-shadow bg-background">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <h4 className="font-semibold text-foreground text-base leading-tight">PDF to Word Template</h4>
-                <Button
-                  onClick={downloadPdfToWordTemplate}
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 shrink-0 h-8 text-xs"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Download
-                </Button>
-              </div>
-              <div className="bg-secondary/50 rounded-md p-3 space-y-2">
-                <p className="text-xs text-muted-foreground">
-                  <strong className="text-foreground">Columns:</strong> Source File, Output Name
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  <strong className="text-foreground">Example:</strong>
-                </p>
-                <code className="text-[10px] bg-background px-2 py-1 rounded block">
-                  document.pdf | output.docx
-                </code>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Convert PDF files to Word format.
+                  Bulk rename PDF files according to your Excel instructions.
                 </p>
               </div>
             </div>
