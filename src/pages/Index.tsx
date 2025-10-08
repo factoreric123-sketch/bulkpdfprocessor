@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Merge, Scissors, Download, FileStack, ArrowDownUp, FileEdit, LogOut, CreditCard, UserCircle, FileType, File } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileUpload } from '@/components/FileUpload';
@@ -176,8 +177,19 @@ const Index = () => {
       // 3) Poll job status until completion
       setMessage('Server processing your PDFs...');
       const pollInterval = 3000;
+      const maxPollAttempts = 600; // 30 minutes max (600 * 3000ms)
+      let pollAttempts = 0;
       await new Promise<void>((resolve, reject) => {
         const timer = setInterval(async () => {
+          pollAttempts++;
+          
+          // Prevent infinite polling
+          if (pollAttempts >= maxPollAttempts) {
+            clearInterval(timer);
+            reject(new Error('Processing timeout - job took too long'));
+            return;
+          }
+
           const { data, error } = await supabase
             .from('processing_jobs')
             .select('status, processed, total, errors, result_path')
@@ -236,7 +248,7 @@ const Index = () => {
         }, pollInterval);
       });
     } catch (error) {
-      console.error('Error processing PDFs:', error);
+      logger.error('Error processing PDFs:', error);
       setStatus('error');
       setMessage(error instanceof Error ? error.message : 'An error occurred while processing PDFs');
       toast({ title: 'Processing failed', description: error instanceof Error ? error.message : 'An error occurred', variant: 'destructive' });
@@ -311,7 +323,7 @@ const Index = () => {
           : `Downloaded ${processedPDFs.length} processed PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
-      console.error('Error processing PDFs:', error);
+      logger.error('Error processing PDFs:', error);
       setStatus('error');
       setMessage(error instanceof Error ? error.message : 'An error occurred while processing PDFs');
       toast({
@@ -390,7 +402,7 @@ const Index = () => {
           : `Downloaded ${processedPDFs.length} split PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
-      console.error('Error processing PDFs:', error);
+      logger.error('Error processing PDFs:', error);
       setStatus('error');
       setMessage(error instanceof Error ? error.message : 'An error occurred while processing PDFs');
       toast({
@@ -469,7 +481,7 @@ const Index = () => {
           : `Downloaded ${processedPDFs.length} reordered PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
-      console.error('Error processing PDFs:', error);
+      logger.error('Error processing PDFs:', error);
       setStatus('error');
       setMessage(error instanceof Error ? error.message : 'An error occurred while processing PDFs');
       toast({
@@ -548,7 +560,7 @@ const Index = () => {
           : `Downloaded ${processedPDFs.length} renamed PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
-      console.error('Error processing PDFs:', error);
+      logger.error('Error processing PDFs:', error);
       setStatus('error');
       setMessage(error instanceof Error ? error.message : 'An error occurred while processing PDFs');
       toast({
@@ -600,7 +612,7 @@ const Index = () => {
           .upload(path, file, { upsert: true });
         
         if (uploadErr) {
-          console.error('Upload error:', uploadErr);
+          logger.error('Upload error:', uploadErr);
           throw new Error(`Failed to upload ${file.name}: ${uploadErr.message}`);
         }
         
@@ -618,7 +630,16 @@ const Index = () => {
 
       // Poll for job status
       let completed = false;
+      let pollAttempts = 0;
+      const maxPollAttempts = 900; // 30 minutes max (900 * 2000ms)
+      
       while (!completed) {
+        pollAttempts++;
+        
+        if (pollAttempts >= maxPollAttempts) {
+          throw new Error('Processing timeout - job took too long');
+        }
+        
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         const { data: job, error: jobFetchErr } = await supabase
@@ -676,7 +697,7 @@ const Index = () => {
         await supabase.storage.from('pdf-uploads').remove([`${userId}/${file.name}`]);
       }
     } catch (error) {
-      console.error('Error processing files:', error);
+      logger.error('Error processing files:', error);
       setStatus('error');
       setMessage(error instanceof Error ? error.message : 'An error occurred while processing files');
       toast({
@@ -728,7 +749,7 @@ const Index = () => {
           .upload(path, file, { upsert: true });
         
         if (uploadErr) {
-          console.error('Upload error:', uploadErr);
+          logger.error('Upload error:', uploadErr);
           throw new Error(`Failed to upload ${file.name}: ${uploadErr.message}`);
         }
         
@@ -746,7 +767,16 @@ const Index = () => {
 
       // Poll for job status
       let completed = false;
+      let pollAttempts = 0;
+      const maxPollAttempts = 900; // 30 minutes max (900 * 2000ms)
+      
       while (!completed) {
+        pollAttempts++;
+        
+        if (pollAttempts >= maxPollAttempts) {
+          throw new Error('Processing timeout - job took too long');
+        }
+        
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         const { data: job, error: jobFetchErr } = await supabase
@@ -804,7 +834,7 @@ const Index = () => {
         await supabase.storage.from('pdf-uploads').remove([`${userId}/${file.name}`]);
       }
     } catch (error) {
-      console.error('Error processing files:', error);
+      logger.error('Error processing files:', error);
       setStatus('error');
       setMessage(error instanceof Error ? error.message : 'An error occurred while processing files');
       toast({
@@ -867,7 +897,7 @@ const Index = () => {
         description: `Downloaded ${instructions.length} renamed Word document${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
-      console.error('Error processing files:', error);
+      logger.error('Error processing files:', error);
       setStatus('error');
       setMessage(error instanceof Error ? error.message : 'An error occurred while processing files');
       toast({

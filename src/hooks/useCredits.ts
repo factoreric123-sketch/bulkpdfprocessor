@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import type { User } from '@supabase/supabase-js';
 
 const CREDITS_KEY = 'pdf_processor_credits';
@@ -62,7 +63,7 @@ export const useCredits = () => {
         }
       }
     } catch (error) {
-      console.error('Error checking subscription:', error);
+      logger.error('Error checking subscription:', error);
     }
   };
 
@@ -140,7 +141,7 @@ export const useCredits = () => {
       if (error) throw error;
       setCredits(data.credits);
     } catch (error) {
-      console.error('Error loading credits:', error);
+      logger.error('Error loading credits:', error);
     } finally {
       setIsLoading(false);
     }
@@ -156,7 +157,7 @@ export const useCredits = () => {
           .eq('user_id', userId);
         localStorage.removeItem(CREDITS_KEY);
       } catch (error) {
-        console.error('Error migrating credits:', error);
+        logger.error('Error migrating credits:', error);
       }
     }
   };
@@ -194,7 +195,7 @@ export const useCredits = () => {
         }
         return false;
       } catch (error) {
-        console.error('Error deducting credits:', error);
+        logger.error('Error deducting credits:', error);
         return false;
       }
     } else {

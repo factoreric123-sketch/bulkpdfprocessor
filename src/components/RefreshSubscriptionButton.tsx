@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { useState } from 'react';
 
 interface RefreshSubscriptionButtonProps {
@@ -44,7 +45,7 @@ export const RefreshSubscriptionButton = ({ onRefresh }: RefreshSubscriptionButt
         onRefresh();
       }
     } catch (error) {
-      console.error('Error refreshing subscription:', error);
+      logger.error('Error refreshing subscription:', error);
       toast({
         title: 'Error',
         description: 'Failed to refresh subscription status.',

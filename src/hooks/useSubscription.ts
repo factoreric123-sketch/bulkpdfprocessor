@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import type { User } from '@supabase/supabase-js';
 
 interface SubscriptionData {
@@ -39,7 +40,7 @@ export const useSubscription = () => {
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
-        console.error('Error checking subscription:', error);
+        logger.error('Error checking subscription:', error);
         setIsLoading(false);
         return;
       }
@@ -47,7 +48,7 @@ export const useSubscription = () => {
       setSubscription(data);
       setIsLoading(false);
     } catch (error) {
-      console.error('Error checking subscription:', error);
+      logger.error('Error checking subscription:', error);
       setIsLoading(false);
     }
   };
@@ -101,7 +102,7 @@ export const useSubscription = () => {
       if (error) throw error;
       return data.url;
     } catch (error) {
-      console.error('Error creating checkout:', error);
+      logger.error('Error creating checkout:', error);
       return null;
     }
   };
@@ -112,7 +113,7 @@ export const useSubscription = () => {
       if (error) throw error;
       return data.url;
     } catch (error) {
-      console.error('Error opening customer portal:', error);
+      logger.error('Error opening customer portal:', error);
       return null;
     }
   };

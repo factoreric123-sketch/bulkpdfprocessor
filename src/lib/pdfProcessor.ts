@@ -2,6 +2,7 @@ import { PDFDocument, PDFName } from 'pdf-lib';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
+import { logger } from './logger';
 
 export interface MergeInstruction {
   sourceFiles: string[];
@@ -138,7 +139,7 @@ export const mergePDFs = async (
     const file = pdfFiles.get(fileName);
     
     if (!file) {
-      console.warn(`PDF file not found: ${fileName}, skipping...`);
+      logger.warn(`PDF file not found: ${fileName}, skipping...`);
       missingFiles.push(fileName);
       continue;
     }
@@ -163,7 +164,7 @@ export const deletePagesFromPDF = async (
   const file = pdfFiles.get(instruction.sourceFile);
   
   if (!file) {
-    console.warn(`PDF file not found: ${instruction.sourceFile}, skipping...`);
+    logger.warn(`PDF file not found: ${instruction.sourceFile}, skipping...`);
     return null;
   }
   
@@ -313,7 +314,7 @@ export const splitPDF = async (
   const file = pdfFiles.get(instruction.sourceFile);
   
   if (!file) {
-    console.warn(`PDF file not found: ${instruction.sourceFile}, skipping...`);
+    logger.warn(`PDF file not found: ${instruction.sourceFile}, skipping...`);
     return null;
   }
   
@@ -351,7 +352,7 @@ export const reorderPDF = async (
   const file = pdfFiles.get(instruction.sourceFile);
   
   if (!file) {
-    console.warn(`PDF file not found: ${instruction.sourceFile}, skipping...`);
+    logger.warn(`PDF file not found: ${instruction.sourceFile}, skipping...`);
     return null;
   }
   
@@ -378,11 +379,10 @@ export const renamePDF = async (
   const file = pdfFiles.get(instruction.oldName);
   
   if (!file) {
-    console.warn(`PDF file not found: ${instruction.oldName}, skipping...`);
+    logger.warn(`PDF file not found: ${instruction.oldName}, skipping...`);
     return null;
   }
   
-  const arrayBuffer = await file.arrayBuffer();
   try {
     const srcBytes = await file.arrayBuffer();
     const sourcePdf = await PDFDocument.load(srcBytes);
@@ -427,13 +427,13 @@ export const renamePDF = async (
       );
       newPdf.catalog.set(PDFName.of('Metadata'), metadataRef);
     } catch (err) {
-      console.warn('Failed to set XMP metadata on rename (continuing):', err);
+      logger.warn('Failed to set XMP metadata on rename (continuing):', err);
     }
 
     const updatedBytes = await newPdf.save();
     return { name: instruction.newName, data: updatedBytes };
   } catch (e) {
-    console.warn('Failed to update PDF metadata on rename, returning original bytes. Error:', e);
+    logger.warn('Failed to update PDF metadata on rename, returning original bytes. Error:', e);
     return { name: instruction.newName, data: new Uint8Array(await file.arrayBuffer()) };
   }
 };
