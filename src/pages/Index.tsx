@@ -961,14 +961,23 @@ const Index = () => {
                   Sign Out
                 </Button>
               ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/auth')}
-                  className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20 cursor-pointer"
-                >
-                  Sign In
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/auth')}
+                    className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20 cursor-pointer"
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => navigate('/auth')}
+                    className="gap-2 cursor-pointer"
+                  >
+                    Create Account
+                  </Button>
+                </>
               )}
             </div>
           </div>
