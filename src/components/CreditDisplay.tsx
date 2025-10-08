@@ -14,24 +14,24 @@ export const CreditDisplay = ({ credits, isLoading, planName, isUnlimited }: Cre
   }
 
   return (
-    <div className="flex items-center gap-2 bg-primary-foreground/10 border border-primary-foreground/20 rounded-lg px-3 py-1.5 backdrop-blur-sm">
+    <div className="inline-flex items-center gap-1.5 bg-primary-foreground/10 border border-primary-foreground/20 rounded-full px-2.5 py-1 text-xs backdrop-blur-sm w-auto">
       {isUnlimited ? (
         <>
-          <Infinity className="w-4 h-4" />
-          <span className="font-medium text-sm">Unlimited</span>
+          <Infinity className="w-3.5 h-3.5" />
+          <span className="font-medium">Unlimited</span>
           {planName && (
-            <Badge variant="secondary" className="text-xs px-2 py-0.5">
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
               {planName}
             </Badge>
           )}
         </>
       ) : (
         <>
-          <Sparkles className="w-4 h-4" />
-          <span className="font-medium text-sm">{credits}</span>
-          <span className="opacity-80 text-sm">credits</span>
+          <Sparkles className="w-3.5 h-3.5" />
+          <span className="font-medium">{credits}</span>
+          <span className="opacity-80">credits</span>
           {planName && (
-            <Badge variant="secondary" className="text-xs px-2 py-0.5">
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
               {planName}
             </Badge>
           )}
