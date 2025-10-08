@@ -93,36 +93,67 @@ export const convertPdfToWord = async (
     throw new Error(`PDF file not found: ${instruction.sourceFile}`);
   }
 
-  onProgress?.(20);
+  onProgress?.(15);
 
   const arrayBuffer = await pdfFile.arrayBuffer();
-  const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+  // Lazy-load pdf.js for robust client-side text extraction (avoids placeholders)
+  // We set the worker from a CDN to simplify bundling.
+  const pdfjs: any = await import('pdfjs-dist/build/pdf.mjs');
+  if (pdfjs?.GlobalWorkerOptions) {
+    pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.min.js';
+  }
+
+  onProgress?.(30);
+
+  const loadingTask = pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) });
+  const pdf = await loadingTask.promise;
 
   onProgress?.(50);
 
-  // Extract text from PDF (basic implementation)
-  const pages = pdfDoc.getPages();
   const paragraphs: Paragraph[] = [];
 
-  for (let i = 0; i < pages.length; i++) {
-    paragraphs.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: `[Content from page ${i + 1}]`,
-            size: 24,
-          }),
-        ],
-      })
-    );
-    
-    // Add spacing
-    paragraphs.push(new Paragraph({ children: [] }));
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const textContent = await page.getTextContent();
+
+    // Join all text items keeping a reasonable spacing
+    const pageText = (textContent.items || [])
+      .map((it: any) => (typeof it?.str === 'string' ? it.str : ''))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (pageText) {
+      // Split into rough paragraphs by sentence boundaries or long spaces
+      const chunks = pageText.split(/(?<=[\.!?])\s{2,}|\n{2,}/);
+      for (const chunk of chunks) {
+        const txt = chunk.trim();
+        if (!txt) {
+          paragraphs.push(new Paragraph({ children: [] }));
+        } else {
+          paragraphs.push(
+            new Paragraph({
+              children: [new TextRun({ text: txt, size: 24 })], // 12pt
+            })
+          );
+        }
+      }
+    } else {
+      // Keep an empty paragraph if nothing was extracted for this page
+      paragraphs.push(new Paragraph({ children: [] }));
+    }
+
+    // Page break between pages (visual separation)
+    if (pageNum < pdf.numPages) {
+      paragraphs.push(new Paragraph({ children: [new TextRun({ text: '', break: 1 })] }));
+    }
+
+    onProgress?.(50 + Math.round((pageNum / pdf.numPages) * 40));
   }
 
-  onProgress?.(80);
+  onProgress?.(95);
 
-  // Create Word document
   const doc = new Document({
     sections: [
       {
@@ -132,15 +163,14 @@ export const convertPdfToWord = async (
     ],
   });
 
-  onProgress?.(90);
-
   const blob = await Packer.toBlob(doc);
   onProgress?.(100);
 
-  return {
-    name: instruction.outputName,
-    data: blob,
-  };
+  const outName = instruction.outputName.endsWith('.docx')
+    ? instruction.outputName
+    : `${instruction.outputName}.docx`;
+
+  return { name: outName, data: blob };
 };
 
 // Rename Word document
