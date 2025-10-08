@@ -226,7 +226,7 @@ const IndexV2 = () => {
               <CreditDisplay 
                 credits={credits} 
                 isLoading={creditsLoading}
-                planName={subscription?.name}
+                planName={subscription?.plan_name || undefined}
                 isUnlimited={isUnlimited}
               />
               <Button
@@ -315,7 +315,8 @@ const IndexV2 = () => {
                   onFilesSelected={handlePdfFiles}
                   files={pdfFiles}
                   onRemoveFile={handleRemovePdfFile}
-                  maxFiles={FILE_PROCESSING.MAX_FILES_PER_BATCH}
+                  title="Upload PDF Files"
+                  description="Drag and drop your PDF files here or click to browse"
                 />
               </div>
 
@@ -327,6 +328,8 @@ const IndexV2 = () => {
                   onFilesSelected={handleExcelFile}
                   files={excelFile}
                   onRemoveFile={handleRemoveExcelFile}
+                  title="Upload Excel Instructions"
+                  description="Upload your Excel file with merge instructions"
                 />
                 <Button
                   variant="outline"
@@ -373,7 +376,8 @@ const IndexV2 = () => {
           open={showNoCreditsDialog}
           onOpenChange={setShowNoCreditsDialog}
           requiredCredits={requiredCredits}
-          currentCredits={credits}
+          availableCredits={credits}
+          isAuthenticated={!!user}
         />
       </main>
 

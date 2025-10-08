@@ -158,13 +158,13 @@ export async function pollJobStatus(
           resolve({
             success: true,
             resultPath: data.result_path,
-            errors: data.errors || [],
+            errors: Array.isArray(data.errors) ? data.errors.map(e => String(e)) : [],
           });
         } else if (data.status === 'failed') {
           clearInterval(timer);
           resolve({
             success: false,
-            errors: data.errors || ['Job failed without specific error'],
+            errors: Array.isArray(data.errors) ? data.errors.map(e => String(e)) : ['Job failed without specific error'],
           });
         }
         

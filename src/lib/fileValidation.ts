@@ -17,7 +17,7 @@ export function validateFile(file: File): ValidationResult {
   }
 
   // Check file extension
-  const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+  const extension = ('.' + file.name.split('.').pop()?.toLowerCase()) as '.pdf' | '.docx' | '.doc';
   if (!SECURITY.ALLOWED_EXTENSIONS.includes(extension)) {
     return {
       valid: false,
@@ -110,14 +110,15 @@ export function estimateMemoryUsage(files: File[]): number {
 
 // Check if we have enough memory for operation
 export function canProcessInMemory(files: File[]): boolean {
-  if (!performance.memory) {
+  const memoryAPI = (performance as any).memory;
+  if (!memoryAPI) {
     // If memory API not available, use conservative estimate
     logger.warn('Performance.memory API not available, using conservative limits');
     return files.length <= 10 && estimateMemoryUsage(files) < 100 * 1024 * 1024; // 100MB
   }
 
   const estimatedUsage = estimateMemoryUsage(files);
-  const availableMemory = performance.memory.jsHeapSizeLimit - performance.memory.usedJSHeapSize;
+  const availableMemory = memoryAPI.jsHeapSizeLimit - memoryAPI.usedJSHeapSize;
   const canProcess = estimatedUsage < availableMemory * FILE_PROCESSING.MAX_MEMORY_USAGE;
 
   logger.info(`Memory check: Estimated ${(estimatedUsage / (1024 * 1024)).toFixed(2)}MB, Available: ${(availableMemory / (1024 * 1024)).toFixed(2)}MB, Can process: ${canProcess}`);

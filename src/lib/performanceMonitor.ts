@@ -17,7 +17,7 @@ interface PerformanceMetrics {
 
 export class PerformanceMonitor {
   private metrics: Map<string, PerformanceMetrics> = new Map();
-  private memoryCheckInterval: NodeJS.Timer | null = null;
+  private memoryCheckInterval: number | null = null;
 
   // Start monitoring an operation
   startOperation(operationId: string, operationName: string) {
@@ -54,9 +54,10 @@ export class PerformanceMonitor {
 
   // Get current memory usage
   private getMemoryUsage() {
-    if (!performance.memory) return null;
+    const memoryAPI = (performance as any).memory;
+    if (!memoryAPI) return null;
 
-    const { usedJSHeapSize, totalJSHeapSize, jsHeapSizeLimit } = performance.memory;
+    const { usedJSHeapSize, totalJSHeapSize, jsHeapSizeLimit } = memoryAPI;
     const percentUsed = (usedJSHeapSize / jsHeapSizeLimit) * 100;
 
     return {
@@ -73,7 +74,7 @@ export class PerformanceMonitor {
       clearInterval(this.memoryCheckInterval);
     }
 
-    this.memoryCheckInterval = setInterval(() => {
+    this.memoryCheckInterval = window.setInterval(() => {
       const memory = this.getMemoryUsage();
       if (!memory) return;
 
@@ -86,7 +87,7 @@ export class PerformanceMonitor {
   // Stop memory monitoring
   stopMemoryMonitoring() {
     if (this.memoryCheckInterval) {
-      clearInterval(this.memoryCheckInterval);
+      window.clearInterval(this.memoryCheckInterval);
       this.memoryCheckInterval = null;
     }
   }

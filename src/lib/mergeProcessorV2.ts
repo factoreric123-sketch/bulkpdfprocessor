@@ -118,7 +118,7 @@ async function processClientSideMerge({
     if (results.length === 1) {
       // Single file - download directly
       const { name, data } = results[0];
-      const blob = new Blob([data], { type: 'application/pdf' });
+      const blob = new Blob([data as any], { type: 'application/pdf' });
       saveAs(blob, name);
     } else {
       // Multiple files - create ZIP
