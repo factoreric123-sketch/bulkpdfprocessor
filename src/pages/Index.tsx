@@ -915,7 +915,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <header className="bg-gradient-primary text-primary-foreground py-16 px-4 relative z-10">
+      <header className="sticky top-0 z-50 bg-gradient-primary text-primary-foreground py-16 px-4">
         <div className="container max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <div className="flex-1">
@@ -971,11 +971,12 @@ const Index = () => {
                     Login
                   </Button>
                   <Button
+                    variant="outline"
                     size="sm"
-                    onClick={() => navigate('/auth')}
-                    className="gap-2 cursor-pointer"
+                    onClick={() => navigate('/auth', { state: { isSignUp: true } })}
+                    className="gap-2 bg-background/10 border-primary-foreground/20 hover:bg-background/20 cursor-pointer"
                   >
-                    Create Account
+                    Get Started
                   </Button>
                 </>
               )}
