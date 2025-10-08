@@ -136,6 +136,20 @@ async function handleWordToPdfJob(
 
       // Create PDF with proper text wrapping
       const pdfDoc = await PDFDocument.create();
+      // Ensure the PDF shows the desired name when opened (document Title metadata)
+      try {
+        const outTitle = instruction.outputName.endsWith('.pdf')
+          ? instruction.outputName.slice(0, -4)
+          : instruction.outputName;
+        pdfDoc.setTitle(outTitle);
+        pdfDoc.setAuthor('Document Processor');
+        pdfDoc.setCreator('process-word-batch');
+        pdfDoc.setProducer('pdf-lib');
+        pdfDoc.setCreationDate(new Date());
+        pdfDoc.setModificationDate(new Date());
+      } catch (_) {
+        // If a platform lacks metadata support, skip without failing the job
+      }
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const fontSize = 12;
       const lineHeight = fontSize * 1.3;
