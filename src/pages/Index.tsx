@@ -915,9 +915,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <header className="bg-gradient-primary text-primary-foreground py-16 px-4 relative z-10">
+      <header className="bg-gradient-primary text-primary-foreground py-8 px-4 relative z-10">
         <div className="container max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex justify-between items-center mb-6">
             <div className="flex-1">
               <CreditDisplay 
                 credits={credits} 
