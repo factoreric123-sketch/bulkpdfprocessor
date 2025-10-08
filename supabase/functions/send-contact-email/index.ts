@@ -38,13 +38,19 @@ const handler = async (req: Request): Promise<Response> => {
         from: "Bulk PDF Processor <onboarding@resend.dev>",
         to: ["factoreric123@gmail.com"],
         reply_to: email,
-        subject: `Contact Form: Message from ${name}`,
+        subject: `Contact Form: Message from ${name.replace(/[<>"'&]/g, '')}`,
         html: `
           <h2>New Contact Form Submission</h2>
-          <p><strong>From:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>From:</strong> ${name.replace(/[<>"'&]/g, (c) => 
+            ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;', '&': '&amp;' }[c] || c)
+          )}</p>
+          <p><strong>Email:</strong> ${email.replace(/[<>"'&]/g, (c) => 
+            ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;', '&': '&amp;' }[c] || c)
+          )}</p>
           <p><strong>Message:</strong></p>
-          <p>${message.replace(/\n/g, '<br>')}</p>
+          <p>${message.replace(/[<>"'&]/g, (c) => 
+            ({ '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;', '&': '&amp;' }[c] || c)
+          ).replace(/\n/g, '<br>')}</p>
         `,
       }),
     });

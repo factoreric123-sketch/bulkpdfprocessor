@@ -161,38 +161,47 @@ export const useCredits = () => {
     }
   };
 
-  // Update storage whenever credits change
+  // Update storage whenever credits change (for anonymous users only)
   useEffect(() => {
-    if (!isLoading) {
-      if (user) {
-        // Don't update DB for unlimited credits
-        if (credits !== 999999) {
-          supabase
-            .from('user_credits')
-            .update({ credits })
-            .eq('user_id', user.id)
-            .then(({ error }) => {
-              if (error) console.error('Error updating credits:', error);
-            });
-        }
-      } else {
-        // Update localStorage for anonymous users
-        localStorage.setItem(CREDITS_KEY, credits.toString());
-      }
+    if (!isLoading && !user) {
+      // Update localStorage for anonymous users only
+      localStorage.setItem(CREDITS_KEY, credits.toString());
     }
   }, [credits, isLoading, user]);
 
-  const deductCredits = (amount: number): boolean => {
+  const deductCredits = async (amount: number): Promise<boolean> => {
     // Unlimited credits (Business plan)
     if (credits === 999999) {
       return true;
     }
     
-    if (credits >= amount) {
+    if (credits < amount) {
+      return false;
+    }
+
+    // For authenticated users, use the secure edge function
+    if (user) {
+      try {
+        const { data, error } = await supabase.functions.invoke('deduct-credits', {
+          body: { amount }
+        });
+
+        if (error) throw error;
+        
+        if (data?.success) {
+          setCredits(prev => prev - amount);
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Error deducting credits:', error);
+        return false;
+      }
+    } else {
+      // For anonymous users, update localStorage directly
       setCredits(prev => prev - amount);
       return true;
     }
-    return false;
   };
 
   const hasCredits = (amount: number = 1): boolean => {
