@@ -1,13 +1,10 @@
-// process-word-batch: Server-side Word/PDF conversion with background job + OCR
+// process-word-batch: Server-side Word/PDF conversion with background job
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import JSZip from 'https://esm.sh/jszip@3.10.1';
 import { PDFDocument, rgb, StandardFonts } from 'https://esm.sh/pdf-lib@1.17.1';
 import mammoth from 'https://esm.sh/mammoth@1.8.0';
 import { Document, Packer, Paragraph, TextRun } from 'https://esm.sh/docx@9.5.1';
 import pdfParse from 'https://esm.sh/pdf-parse@1.1.1';
-
-// For rendering PDF pages as images for OCR
-import * as pdfjs from 'https://esm.sh/pdfjs-dist@4.6.82/legacy/build/pdf.mjs';
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<any>) => void };
 
@@ -123,39 +120,46 @@ async function handleWordToPdfJob(
       const result = await mammoth.convertToHtml({ arrayBuffer: buf });
       const html = result.value;
 
-      // Extract text from HTML
+      // Extract text from HTML (preserve structure)
       const textContent = html
-        .replace(/<[^>]*>/g, '\n')
-        .replace(/\n+/g, '\n')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n\n')
+        .replace(/<\/div>/gi, '\n')
+        .replace(/<\/h[1-6]>/gi, '\n\n')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
         .trim();
 
-      // Create PDF
+      // Create PDF with proper text wrapping
       const pdfDoc = await PDFDocument.create();
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const fontSize = 12;
-      const lineHeight = fontSize * 1.2;
+      const lineHeight = fontSize * 1.3;
       const margin = 50;
       
-      let page = pdfDoc.addPage();
-      let { width, height } = page.getSize();
+      let currentPage = pdfDoc.addPage();
+      let { width, height } = currentPage.getSize();
       let y = height - margin;
       const maxWidth = width - (margin * 2);
 
       const lines = textContent.split('\n');
+      
       for (const line of lines) {
+        // Handle empty lines (paragraph breaks)
         if (!line.trim()) {
           y -= lineHeight;
           if (y < margin) {
-            page = pdfDoc.addPage();
-            const newSize = page.getSize();
-            width = newSize.width;
-            height = newSize.height;
+            currentPage = pdfDoc.addPage();
             y = height - margin;
           }
           continue;
         }
 
-        // Wrap text to fit page width
+        // Word-wrap long lines
         const words = line.split(' ');
         let currentLine = '';
         
@@ -164,8 +168,8 @@ async function handleWordToPdfJob(
           const textWidth = font.widthOfTextAtSize(testLine, fontSize);
           
           if (textWidth > maxWidth && currentLine) {
-            // Draw current line
-            page.drawText(currentLine, {
+            // Draw the current line
+            currentPage.drawText(currentLine, {
               x: margin,
               y,
               size: fontSize,
@@ -173,23 +177,22 @@ async function handleWordToPdfJob(
               color: rgb(0, 0, 0),
             });
             y -= lineHeight;
-            currentLine = word;
             
+            // Check if we need a new page
             if (y < margin) {
-              page = pdfDoc.addPage();
-              const newSize = page.getSize();
-              width = newSize.width;
-              height = newSize.height;
+              currentPage = pdfDoc.addPage();
               y = height - margin;
             }
+            
+            currentLine = word;
           } else {
             currentLine = testLine;
           }
         }
         
-        // Draw remaining text
+        // Draw the remaining text of this line
         if (currentLine) {
-          page.drawText(currentLine, {
+          currentPage.drawText(currentLine, {
             x: margin,
             y,
             size: fontSize,
@@ -198,11 +201,9 @@ async function handleWordToPdfJob(
           });
           y -= lineHeight;
           
+          // Check if we need a new page
           if (y < margin) {
-            page = pdfDoc.addPage();
-            const newSize = page.getSize();
-            width = newSize.width;
-            height = newSize.height;
+            currentPage = pdfDoc.addPage();
             y = height - margin;
           }
         }
@@ -259,8 +260,6 @@ async function handlePdfToWordJob(
   const allErrors: string[] = [];
   let processed = 0;
 
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-
   for (const instruction of instructions) {
     try {
       const path = `${userId}/${instruction.sourceFile}`;
@@ -278,83 +277,7 @@ async function handlePdfToWordJob(
       // Parse PDF to extract text
       const buf = await fileData.arrayBuffer();
       const data = await pdfParse(new Uint8Array(buf));
-      let text = data.text?.trim() || '';
-
-      // If very little text was extracted (likely scanned PDF), use OCR via Lovable AI
-      if (text.length < 100 && LOVABLE_API_KEY) {
-        console.log(`[PDF→Word] Low text content (${text.length} chars), attempting OCR for ${instruction.sourceFile}`);
-        
-        try {
-          // Load PDF with pdfjs to render pages as images
-          const pdfDoc = await pdfjs.getDocument({ data: new Uint8Array(buf) }).promise;
-          const ocrTexts: string[] = [];
-
-          for (let pageNum = 1; pageNum <= Math.min(pdfDoc.numPages, 20); pageNum++) { // Limit to 20 pages for OCR
-            const page = await pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale: 2.0 });
-            
-            // Create canvas to render page
-            const canvas = new OffscreenCanvas(viewport.width, viewport.height);
-            const context = canvas.getContext('2d') as any;
-            
-            await page.render({
-              canvasContext: context,
-              viewport: viewport,
-            }).promise;
-
-            // Convert canvas to base64 PNG
-            const blob = await canvas.convertToBlob({ type: 'image/png' });
-            const arrayBuf = await blob.arrayBuffer();
-            const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
-
-            // Call Lovable AI with vision to extract text
-            const ocrResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model: 'google/gemini-2.5-flash',
-                messages: [
-                  {
-                    role: 'user',
-                    content: [
-                      {
-                        type: 'text',
-                        text: 'Extract all text from this image. Return only the text content, preserving formatting and line breaks as much as possible. Do not add any commentary.',
-                      },
-                      {
-                        type: 'image_url',
-                        image_url: {
-                          url: `data:image/png;base64,${base64}`,
-                        },
-                      },
-                    ],
-                  },
-                ],
-                max_tokens: 4000,
-              }),
-            });
-
-            if (ocrResponse.ok) {
-              const ocrData = await ocrResponse.json();
-              const extractedText = ocrData.choices?.[0]?.message?.content || '';
-              if (extractedText.trim()) {
-                ocrTexts.push(`--- Page ${pageNum} ---\n${extractedText}`);
-              }
-            }
-          }
-
-          if (ocrTexts.length > 0) {
-            text = ocrTexts.join('\n\n');
-            console.log(`[PDF→Word] OCR extracted ${text.length} chars from ${ocrTexts.length} pages`);
-          }
-        } catch (ocrErr) {
-          console.error('[PDF→Word] OCR failed:', ocrErr);
-          // Fall back to whatever text was extracted by pdf-parse
-        }
-      }
+      const text = data.text || '';
 
       // Create Word document with extracted text
       const paragraphs: Paragraph[] = [];
