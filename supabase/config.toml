@@ -37,6 +37,9 @@ verify_jwt = false
 [functions.process-pdf-batch]
 verify_jwt = true
 
+[functions.process-word-batch]
+verify_jwt = true
+
 [realtime]
 enabled = true
 ip_version = "ipv4"

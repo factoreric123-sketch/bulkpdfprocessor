@@ -584,33 +584,97 @@ const Index = () => {
         return;
       }
 
-      const wordMap = new Map(wordFiles.map((file) => [file.name, file]));
-      const processedFiles: { name: string; data: Uint8Array }[] = [];
+      // Upload files to storage
+      setMessage('Uploading Word files...');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
 
-      for (let i = 0; i < instructions.length; i++) {
-        const instruction = instructions[i];
-        setMessage(`Converting ${instruction.sourceFile}... (${i + 1}/${instructions.length})`);
+      const userId = session.user.id;
+      
+      for (let i = 0; i < wordFiles.length; i++) {
+        const file = wordFiles[i];
+        const path = `${userId}/${file.name}`;
         
-        const convertedPdf = await convertWordToPdf(instruction, wordMap, (fileProgress) => {
-          const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
-          setProgress(totalProgress);
-        });
-
-        processedFiles.push(convertedPdf);
+        const { error: uploadErr } = await supabase.storage
+          .from('pdf-uploads')
+          .upload(path, file, { upsert: true });
+        
+        if (uploadErr) {
+          console.error('Upload error:', uploadErr);
+          throw new Error(`Failed to upload ${file.name}: ${uploadErr.message}`);
+        }
+        
+        setProgress((i + 1) / wordFiles.length * 20);
       }
 
-      setMessage('Creating ZIP file...');
-      await downloadFilesAsZip(processedFiles);
-
-      deductCredits(creditsNeeded);
-
-      setStatus('success');
-      setMessage(`Successfully converted ${instructions.length} file${instructions.length > 1 ? 's' : ''}!`);
-      setProgress(100);
-      toast({
-        title: 'Success!',
-        description: `Downloaded ${instructions.length} converted PDF${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+      // Start server-side processing
+      setMessage('Starting conversion...');
+      const { data: jobData, error: jobErr } = await supabase.functions.invoke('process-word-batch', {
+        body: { operation: 'word-to-pdf', instructions },
       });
+
+      if (jobErr) throw jobErr;
+      const jobId = jobData.jobId;
+
+      // Poll for job status
+      let completed = false;
+      while (!completed) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const { data: job, error: jobFetchErr } = await supabase
+          .from('processing_jobs')
+          .select('*')
+          .eq('id', jobId)
+          .single();
+
+        if (jobFetchErr) throw jobFetchErr;
+
+        const jobProgress = job.total > 0 ? (job.processed / job.total) * 80 + 20 : 20;
+        setProgress(jobProgress);
+        setMessage(`Converting files... (${job.processed}/${job.total})`);
+
+        if (job.status === 'completed') {
+          completed = true;
+          
+          // Download result ZIP
+          const { data: signedUrlData } = await supabase.storage
+            .from('pdf-results')
+            .createSignedUrl(job.result_path, 60);
+          
+          if (signedUrlData?.signedUrl) {
+            const link = document.createElement('a');
+            link.href = signedUrlData.signedUrl;
+            link.download = 'word-to-pdf-result.zip';
+            link.click();
+          }
+
+          deductCredits(creditsNeeded);
+
+          const errors = Array.isArray(job.errors) ? job.errors as string[] : [];
+          if (errors.length > 0) {
+            setErrorReport({
+              successful: job.total - errors.length,
+              failed: errors,
+            });
+          }
+
+          setStatus('success');
+          const successCount = job.total - errors.length;
+          setMessage(`Successfully converted ${successCount} file${successCount !== 1 ? 's' : ''}!`);
+          setProgress(100);
+          toast({
+            title: 'Success!',
+            description: `Downloaded converted PDFs as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+          });
+        } else if (job.status === 'failed') {
+          throw new Error(job.errors?.[0] || 'Processing failed');
+        }
+      }
+
+      // Cleanup uploaded files
+      for (const file of wordFiles) {
+        await supabase.storage.from('pdf-uploads').remove([`${userId}/${file.name}`]);
+      }
     } catch (error) {
       console.error('Error processing files:', error);
       setStatus('error');
@@ -648,33 +712,97 @@ const Index = () => {
         return;
       }
 
-      const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
-      const processedFiles: { name: string; data: Uint8Array | Blob }[] = [];
+      // Upload files to storage
+      setMessage('Uploading PDF files...');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
 
-      for (let i = 0; i < instructions.length; i++) {
-        const instruction = instructions[i];
-        setMessage(`Converting ${instruction.sourceFile}... (${i + 1}/${instructions.length})`);
+      const userId = session.user.id;
+      
+      for (let i = 0; i < pdfFiles.length; i++) {
+        const file = pdfFiles[i];
+        const path = `${userId}/${file.name}`;
         
-        const convertedWord = await convertPdfToWord(instruction, pdfMap, (fileProgress) => {
-          const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
-          setProgress(totalProgress);
-        });
-
-        processedFiles.push(convertedWord);
+        const { error: uploadErr } = await supabase.storage
+          .from('pdf-uploads')
+          .upload(path, file, { upsert: true });
+        
+        if (uploadErr) {
+          console.error('Upload error:', uploadErr);
+          throw new Error(`Failed to upload ${file.name}: ${uploadErr.message}`);
+        }
+        
+        setProgress((i + 1) / pdfFiles.length * 20);
       }
 
-      setMessage('Creating ZIP file...');
-      await downloadFilesAsZip(processedFiles);
-
-      deductCredits(creditsNeeded);
-
-      setStatus('success');
-      setMessage(`Successfully converted ${instructions.length} file${instructions.length > 1 ? 's' : ''}!`);
-      setProgress(100);
-      toast({
-        title: 'Success!',
-        description: `Downloaded ${instructions.length} converted Word document${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+      // Start server-side processing
+      setMessage('Starting conversion...');
+      const { data: jobData, error: jobErr } = await supabase.functions.invoke('process-word-batch', {
+        body: { operation: 'pdf-to-word', instructions },
       });
+
+      if (jobErr) throw jobErr;
+      const jobId = jobData.jobId;
+
+      // Poll for job status
+      let completed = false;
+      while (!completed) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const { data: job, error: jobFetchErr } = await supabase
+          .from('processing_jobs')
+          .select('*')
+          .eq('id', jobId)
+          .single();
+
+        if (jobFetchErr) throw jobFetchErr;
+
+        const jobProgress = job.total > 0 ? (job.processed / job.total) * 80 + 20 : 20;
+        setProgress(jobProgress);
+        setMessage(`Converting files... (${job.processed}/${job.total})`);
+
+        if (job.status === 'completed') {
+          completed = true;
+          
+          // Download result ZIP
+          const { data: signedUrlData } = await supabase.storage
+            .from('pdf-results')
+            .createSignedUrl(job.result_path, 60);
+          
+          if (signedUrlData?.signedUrl) {
+            const link = document.createElement('a');
+            link.href = signedUrlData.signedUrl;
+            link.download = 'pdf-to-word-result.zip';
+            link.click();
+          }
+
+          deductCredits(creditsNeeded);
+
+          const errors = Array.isArray(job.errors) ? job.errors as string[] : [];
+          if (errors.length > 0) {
+            setErrorReport({
+              successful: job.total - errors.length,
+              failed: errors,
+            });
+          }
+
+          setStatus('success');
+          const successCount = job.total - errors.length;
+          setMessage(`Successfully converted ${successCount} file${successCount !== 1 ? 's' : ''}!`);
+          setProgress(100);
+          toast({
+            title: 'Success!',
+            description: `Downloaded converted Word documents as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+          });
+        } else if (job.status === 'failed') {
+          throw new Error(job.errors?.[0] || 'Processing failed');
+        }
+      }
+
+      // Cleanup uploaded files
+      for (const file of pdfFiles) {
+        await supabase.storage.from('pdf-uploads').remove([`${userId}/${file.name}`]);
+      }
     } catch (error) {
       console.error('Error processing files:', error);
       setStatus('error');
