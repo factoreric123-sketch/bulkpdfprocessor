@@ -13,7 +13,7 @@ interface ErrorReport {
 
 class ErrorTracker {
   private errors: ErrorReport[] = [];
-  private flushTimeout: NodeJS.Timeout | null = null;
+  private flushTimeout: number | null = null;
 
   constructor() {
     this.setupGlobalHandlers();
@@ -52,8 +52,8 @@ class ErrorTracker {
     this.errors.push(report);
     
     // Batch errors and send after a delay
-    if (this.flushTimeout) clearTimeout(this.flushTimeout);
-    this.flushTimeout = setTimeout(() => this.flush(), 5000);
+    if (this.flushTimeout) window.clearTimeout(this.flushTimeout);
+    this.flushTimeout = window.setTimeout(() => this.flush(), 5000);
     
     // Log to console in development
     if (import.meta.env.MODE === 'development') {
@@ -65,9 +65,9 @@ class ErrorTracker {
     if (this.errors.length === 0) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('error_logs')
-        .insert(this.errors);
+        .insert(this.errors as any);
 
       if (!error) {
         this.errors = [];
@@ -79,7 +79,7 @@ class ErrorTracker {
 
   // Get error stats for display
   async getErrorStats() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('error_logs')
       .select('message, count')
       .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())

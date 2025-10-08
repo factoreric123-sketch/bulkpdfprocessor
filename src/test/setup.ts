@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { expect, afterEach } from 'vitest';
+import { expect, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 
@@ -34,8 +34,8 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock performance.memory if not available
-if (!performance.memory) {
-  Object.defineProperty(performance, 'memory', {
+if (!(performance as any).memory) {
+  Object.defineProperty(performance as any, 'memory', {
     writable: true,
     value: {
       usedJSHeapSize: 100000000,

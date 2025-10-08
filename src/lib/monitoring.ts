@@ -15,35 +15,36 @@ interface PerformanceMetric {
 
 class MonitoringService {
   private metrics: PerformanceMetric[] = [];
-  private flushInterval: NodeJS.Timer | null = null;
+  private flushInterval: number | null = null;
 
   constructor() {
     // Flush metrics every 30 seconds
     this.startAutoFlush();
   }
 
-  // Track operation performance
-  async trackOperation(
+  async trackOperation<T>(
     operation: string,
     fileCount: number,
     totalSize: number,
-    execute: () => Promise<void>
-  ) {
+    execute: () => Promise<T>
+  ): Promise<T> {
     const startTime = performance.now();
-    const startMemory = performance.memory?.usedJSHeapSize;
+    const startMemory = (performance as any).memory?.usedJSHeapSize;
     let success = true;
     let errorMessage: string | undefined;
+    let result!: T;
 
     try {
-      await execute();
+      result = await execute();
+      return result;
     } catch (error) {
       success = false;
       errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw error;
     } finally {
       const duration = performance.now() - startTime;
-      const memoryUsed = performance.memory?.usedJSHeapSize 
-        ? performance.memory.usedJSHeapSize - (startMemory || 0)
+      const memoryUsed = (performance as any).memory?.usedJSHeapSize 
+        ? (performance as any).memory.usedJSHeapSize - (startMemory || 0)
         : undefined;
 
       const metric: PerformanceMetric = {
@@ -58,8 +59,6 @@ class MonitoringService {
       };
 
       this.metrics.push(metric);
-      
-      // Log locally
       logger.info('Operation tracked:', {
         operation,
         duration: `${duration.toFixed(2)}ms`,
@@ -67,7 +66,6 @@ class MonitoringService {
         fileCount,
       });
 
-      // Send critical errors immediately
       if (!success) {
         await this.flush();
       }
@@ -106,9 +104,9 @@ class MonitoringService {
 
     try {
       // Store in a simple metrics table
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('app_metrics')
-        .insert(this.metrics);
+        .insert(this.metrics as any);
 
       if (error) {
         logger.error('Failed to send metrics:', error);
@@ -122,7 +120,7 @@ class MonitoringService {
   }
 
   private startAutoFlush() {
-    this.flushInterval = setInterval(() => {
+    this.flushInterval = window.setInterval(() => {
       this.flush();
     }, 30000); // Every 30 seconds
   }
