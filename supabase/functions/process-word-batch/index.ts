@@ -1,12 +1,13 @@
-// process-word-batch: Server-side Word/PDF conversion with background job
+// process-word-batch: Server-side Word/PDF conversion with background job + OCR
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
-import JSZip from 'npm:jszip@3.10.1';
-import { PDFDocument, rgb, StandardFonts } from 'npm:pdf-lib@1.17.1';
-import mammoth from 'npm:mammoth@1.8.0';
-import { Document, Packer, Paragraph, TextRun } from 'npm:docx@9.5.1';
+import JSZip from 'https://esm.sh/jszip@3.10.1';
+import { PDFDocument, rgb, StandardFonts } from 'https://esm.sh/pdf-lib@1.17.1';
+import mammoth from 'https://esm.sh/mammoth@1.8.0';
+import { Document, Packer, Paragraph, TextRun } from 'https://esm.sh/docx@9.5.1';
+import pdfParse from 'https://esm.sh/pdf-parse@1.1.1';
 
-// @deno-types="npm:@types/pdf-parse@1.1.4"
-import pdfParse from 'npm:pdf-parse@1.1.1';
+// For rendering PDF pages as images for OCR
+import * as pdfjs from 'https://esm.sh/pdfjs-dist@4.6.82/legacy/build/pdf.mjs';
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<any>) => void };
 
@@ -258,6 +259,8 @@ async function handlePdfToWordJob(
   const allErrors: string[] = [];
   let processed = 0;
 
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+
   for (const instruction of instructions) {
     try {
       const path = `${userId}/${instruction.sourceFile}`;
@@ -275,7 +278,83 @@ async function handlePdfToWordJob(
       // Parse PDF to extract text
       const buf = await fileData.arrayBuffer();
       const data = await pdfParse(new Uint8Array(buf));
-      const text = data.text;
+      let text = data.text?.trim() || '';
+
+      // If very little text was extracted (likely scanned PDF), use OCR via Lovable AI
+      if (text.length < 100 && LOVABLE_API_KEY) {
+        console.log(`[PDF→Word] Low text content (${text.length} chars), attempting OCR for ${instruction.sourceFile}`);
+        
+        try {
+          // Load PDF with pdfjs to render pages as images
+          const pdfDoc = await pdfjs.getDocument({ data: new Uint8Array(buf) }).promise;
+          const ocrTexts: string[] = [];
+
+          for (let pageNum = 1; pageNum <= Math.min(pdfDoc.numPages, 20); pageNum++) { // Limit to 20 pages for OCR
+            const page = await pdfDoc.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 2.0 });
+            
+            // Create canvas to render page
+            const canvas = new OffscreenCanvas(viewport.width, viewport.height);
+            const context = canvas.getContext('2d') as any;
+            
+            await page.render({
+              canvasContext: context,
+              viewport: viewport,
+            }).promise;
+
+            // Convert canvas to base64 PNG
+            const blob = await canvas.convertToBlob({ type: 'image/png' });
+            const arrayBuf = await blob.arrayBuffer();
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
+
+            // Call Lovable AI with vision to extract text
+            const ocrResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemini-2.5-flash',
+                messages: [
+                  {
+                    role: 'user',
+                    content: [
+                      {
+                        type: 'text',
+                        text: 'Extract all text from this image. Return only the text content, preserving formatting and line breaks as much as possible. Do not add any commentary.',
+                      },
+                      {
+                        type: 'image_url',
+                        image_url: {
+                          url: `data:image/png;base64,${base64}`,
+                        },
+                      },
+                    ],
+                  },
+                ],
+                max_tokens: 4000,
+              }),
+            });
+
+            if (ocrResponse.ok) {
+              const ocrData = await ocrResponse.json();
+              const extractedText = ocrData.choices?.[0]?.message?.content || '';
+              if (extractedText.trim()) {
+                ocrTexts.push(`--- Page ${pageNum} ---\n${extractedText}`);
+              }
+            }
+          }
+
+          if (ocrTexts.length > 0) {
+            text = ocrTexts.join('\n\n');
+            console.log(`[PDF→Word] OCR extracted ${text.length} chars from ${ocrTexts.length} pages`);
+          }
+        } catch (ocrErr) {
+          console.error('[PDF→Word] OCR failed:', ocrErr);
+          // Fall back to whatever text was extracted by pdf-parse
+        }
+      }
 
       // Create Word document with extracted text
       const paragraphs: Paragraph[] = [];
@@ -288,7 +367,7 @@ async function handlePdfToWordJob(
               children: [
                 new TextRun({
                   text: line,
-                  size: 24,
+                  size: 24, // 12pt
                 }),
               ],
             })
