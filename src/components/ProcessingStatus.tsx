@@ -5,9 +5,10 @@ interface ProcessingStatusProps {
   status: 'idle' | 'processing' | 'success' | 'error';
   progress: number;
   message: string;
+  batchProgress?: { current: number; total: number };
 }
 
-export const ProcessingStatus = ({ status, progress, message }: ProcessingStatusProps) => {
+export const ProcessingStatus = ({ status, progress, message, batchProgress }: ProcessingStatusProps) => {
   if (status === 'idle') return null;
 
   return (
@@ -27,7 +28,15 @@ export const ProcessingStatus = ({ status, progress, message }: ProcessingStatus
         </div>
         
         {status === 'processing' && (
-          <Progress value={progress} className="h-2" />
+          <>
+            {batchProgress && batchProgress.total > 0 && (
+              <p className="text-sm text-muted-foreground">
+                Batch {batchProgress.current} of {batchProgress.total}
+              </p>
+            )}
+            <Progress value={progress} className="h-2" />
+            <p className="text-xs text-muted-foreground text-right">{Math.round(progress)}%</p>
+          </>
         )}
       </div>
     </div>

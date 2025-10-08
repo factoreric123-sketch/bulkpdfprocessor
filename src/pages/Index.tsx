@@ -69,6 +69,7 @@ const Index = () => {
   const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
   const [requiredCredits, setRequiredCredits] = useState(0);
   const [errorReport, setErrorReport] = useState<{ successful: number; failed: string[] } | null>(null);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   const { toast } = useToast();
   const navigate = useNavigate();
   const { credits, isLoading: creditsLoading, deductCredits, hasCredits, user, subscription, isUnlimited } = useCredits();
@@ -144,19 +145,39 @@ const Index = () => {
       const processedPDFs: { name: string; data: Uint8Array }[] = [];
       const allMissingFiles: string[] = [];
 
-      for (let i = 0; i < instructions.length; i++) {
-        const instruction = instructions[i];
-        setMessage(`Merging PDFs for ${instruction.outputName}... (${i + 1}/${instructions.length})`);
-        
-        const result = await mergePDFs(instruction, pdfMap, (fileProgress) => {
-          const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
-          setProgress(totalProgress);
-        });
+      // Batch processing - 20 PDFs at a time
+      const BATCH_SIZE = 20;
+      const totalBatches = Math.ceil(instructions.length / BATCH_SIZE);
+      setBatchProgress({ current: 0, total: totalBatches });
 
-        if (result.missingFiles.length > 0) {
-          allMissingFiles.push(...result.missingFiles);
+      for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+        const batchStart = batchIndex * BATCH_SIZE;
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, instructions.length);
+        const batchInstructions = instructions.slice(batchStart, batchEnd);
+
+        setBatchProgress({ current: batchIndex + 1, total: totalBatches });
+        setMessage(`Processing batch ${batchIndex + 1}/${totalBatches}...`);
+
+        for (let i = 0; i < batchInstructions.length; i++) {
+          const instruction = batchInstructions[i];
+          const absoluteIndex = batchStart + i;
+          setMessage(`Batch ${batchIndex + 1}/${totalBatches}: Merging ${instruction.outputName}... (${absoluteIndex + 1}/${instructions.length})`);
+          
+          const result = await mergePDFs(instruction, pdfMap, (fileProgress) => {
+            const batchProgress = (i / batchInstructions.length) * (100 / totalBatches);
+            const previousBatchesProgress = (batchIndex / totalBatches) * 100;
+            const totalProgress = previousBatchesProgress + batchProgress;
+            setProgress(totalProgress);
+          });
+
+          if (result.missingFiles.length > 0) {
+            allMissingFiles.push(...result.missingFiles);
+          }
+          processedPDFs.push({ name: instruction.outputName, data: result.data });
         }
-        processedPDFs.push({ name: instruction.outputName, data: result.data });
+
+        // Allow UI to update between batches
+        await new Promise(resolve => setTimeout(resolve, 10));
       }
 
       setMessage('Creating ZIP file...');
@@ -168,6 +189,7 @@ const Index = () => {
       setStatus('success');
       setMessage(`Successfully merged ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}!`);
       setProgress(100);
+      setBatchProgress({ current: 0, total: 0 });
       
       // Show error report if there were missing files
       if (allMissingFiles.length > 0) {
@@ -184,6 +206,7 @@ const Index = () => {
       console.error('Error processing PDFs:', error);
       setStatus('error');
       setMessage(error instanceof Error ? error.message : 'An error occurred while processing PDFs');
+      setBatchProgress({ current: 0, total: 0 });
       toast({
         title: 'Processing failed',
         description: error instanceof Error ? error.message : 'An error occurred',
@@ -730,6 +753,7 @@ const Index = () => {
     setProgress(0);
     setMessage('');
     setErrorReport(null);
+    setBatchProgress({ current: 0, total: 0 });
   };
 
   return (
@@ -1081,7 +1105,7 @@ const Index = () => {
           </TabsContent>
 
           {/* Processing Status */}
-          <ProcessingStatus status={status} progress={progress} message={message} />
+          <ProcessingStatus status={status} progress={progress} message={message} batchProgress={batchProgress} />
           
           {/* Error Report */}
           {errorReport && (
