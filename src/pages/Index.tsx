@@ -661,26 +661,26 @@ const Index = () => {
         <SubscriptionStatus />
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full max-w-6xl mx-auto grid-cols-5 bg-card shadow-soft">
-            <TabsTrigger value="merge" className="flex items-center gap-2">
+          <TabsList className="grid w-full max-w-6xl mx-auto grid-cols-5 bg-card shadow-soft h-auto">
+            <TabsTrigger value="merge" className="flex flex-row items-center justify-center gap-2 py-3">
               <Merge className="w-4 h-4" />
-              Merge
+              <span>Merge</span>
             </TabsTrigger>
-            <TabsTrigger value="delete" className="flex items-center gap-2">
+            <TabsTrigger value="delete" className="flex flex-row items-center justify-center gap-2 py-3">
               <Scissors className="w-4 h-4" />
-              Delete
+              <span>Delete</span>
             </TabsTrigger>
-            <TabsTrigger value="split" className="flex items-center gap-2">
+            <TabsTrigger value="split" className="flex flex-row items-center justify-center gap-2 py-3">
               <FileStack className="w-4 h-4" />
-              Split
+              <span>Split</span>
             </TabsTrigger>
-            <TabsTrigger value="reorder" className="flex items-center gap-2">
+            <TabsTrigger value="reorder" className="flex flex-row items-center justify-center gap-2 py-3">
               <ArrowDownUp className="w-4 h-4" />
-              Reorder
+              <span>Reorder</span>
             </TabsTrigger>
-            <TabsTrigger value="rename" className="flex items-center gap-2">
+            <TabsTrigger value="rename" className="flex flex-row items-center justify-center gap-2 py-3">
               <FileEdit className="w-4 h-4" />
-              Rename
+              <span>Rename</span>
             </TabsTrigger>
           </TabsList>
 
