@@ -150,7 +150,10 @@ async function handleMergeJob(
 
     const { error: upErr } = await supabase.storage
       .from('pdf-results')
-      .upload(resultPath, new Blob([zipBlob], { type: 'application/zip' }), { upsert: true });
+      .upload(resultPath, zipBlob, { 
+        contentType: 'application/zip',
+        upsert: true 
+      });
 
     if (upErr) throw upErr;
 
