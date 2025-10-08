@@ -129,15 +129,18 @@ export const mergePDFs = async (
   instruction: MergeInstruction,
   pdfFiles: Map<string, File>,
   onProgress: (progress: number) => void
-): Promise<Uint8Array> => {
+): Promise<{ data: Uint8Array; missingFiles: string[] }> => {
   const mergedPdf = await PDFDocument.create();
+  const missingFiles: string[] = [];
   
   for (let i = 0; i < instruction.sourceFiles.length; i++) {
     const fileName = instruction.sourceFiles[i];
     const file = pdfFiles.get(fileName);
     
     if (!file) {
-      throw new Error(`PDF file not found: ${fileName}`);
+      console.warn(`PDF file not found: ${fileName}, skipping...`);
+      missingFiles.push(fileName);
+      continue;
     }
     
     const arrayBuffer = await file.arrayBuffer();
@@ -148,18 +151,20 @@ export const mergePDFs = async (
     onProgress(((i + 1) / instruction.sourceFiles.length) * 100);
   }
   
-  return await mergedPdf.save();
+  const data = await mergedPdf.save();
+  return { data, missingFiles };
 };
 
 export const deletePagesFromPDF = async (
   instruction: DeletePagesInstruction,
   pdfFiles: Map<string, File>,
   onProgress: (progress: number) => void
-): Promise<Uint8Array> => {
+): Promise<{ data: Uint8Array; missingFiles: string[] } | null> => {
   const file = pdfFiles.get(instruction.sourceFile);
   
   if (!file) {
-    throw new Error(`PDF file not found: ${instruction.sourceFile}`);
+    console.warn(`PDF file not found: ${instruction.sourceFile}, skipping...`);
+    return null;
   }
   
   const arrayBuffer = await file.arrayBuffer();
@@ -175,7 +180,8 @@ export const deletePagesFromPDF = async (
   }
   
   onProgress(100);
-  return await pdf.save();
+  const data = await pdf.save();
+  return { data, missingFiles: [] };
 };
 
 export const downloadPDF = (pdfBytes: Uint8Array, fileName: string) => {
@@ -303,11 +309,12 @@ export const splitPDF = async (
   instruction: SplitInstruction,
   pdfFiles: Map<string, File>,
   onProgress: (progress: number) => void
-): Promise<{ name: string; data: Uint8Array }[]> => {
+): Promise<{ name: string; data: Uint8Array }[] | null> => {
   const file = pdfFiles.get(instruction.sourceFile);
   
   if (!file) {
-    throw new Error(`PDF file not found: ${instruction.sourceFile}`);
+    console.warn(`PDF file not found: ${instruction.sourceFile}, skipping...`);
+    return null;
   }
   
   const arrayBuffer = await file.arrayBuffer();
@@ -340,11 +347,12 @@ export const reorderPDF = async (
   instruction: ReorderInstruction,
   pdfFiles: Map<string, File>,
   onProgress: (progress: number) => void
-): Promise<Uint8Array> => {
+): Promise<{ data: Uint8Array; missingFiles: string[] } | null> => {
   const file = pdfFiles.get(instruction.sourceFile);
   
   if (!file) {
-    throw new Error(`PDF file not found: ${instruction.sourceFile}`);
+    console.warn(`PDF file not found: ${instruction.sourceFile}, skipping...`);
+    return null;
   }
   
   const arrayBuffer = await file.arrayBuffer();
@@ -359,17 +367,19 @@ export const reorderPDF = async (
   }
   
   onProgress(100);
-  return await newPdf.save();
+  const data = await newPdf.save();
+  return { data, missingFiles: [] };
 };
 
 export const renamePDF = async (
   instruction: RenameInstruction,
   pdfFiles: Map<string, File>
-): Promise<{ name: string; data: Uint8Array }> => {
+): Promise<{ name: string; data: Uint8Array } | null> => {
   const file = pdfFiles.get(instruction.oldName);
   
   if (!file) {
-    throw new Error(`PDF file not found: ${instruction.oldName}`);
+    console.warn(`PDF file not found: ${instruction.oldName}, skipping...`);
+    return null;
   }
   
   const arrayBuffer = await file.arrayBuffer();

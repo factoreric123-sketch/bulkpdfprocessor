@@ -9,6 +9,7 @@ import { ProcessingStatus } from '@/components/ProcessingStatus';
 import { CreditDisplay } from '@/components/CreditDisplay';
 import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { NoCreditsDialog } from '@/components/NoCreditsDialog';
+import { ErrorReport } from '@/components/ErrorReport';
 import { Footer } from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 import { useCredits } from '@/hooks/useCredits';
@@ -67,6 +68,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('merge');
   const [showNoCreditsDialog, setShowNoCreditsDialog] = useState(false);
   const [requiredCredits, setRequiredCredits] = useState(0);
+  const [errorReport, setErrorReport] = useState<{ successful: number; failed: string[] } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { credits, isLoading: creditsLoading, deductCredits, hasCredits, user, subscription, isUnlimited } = useCredits();
@@ -140,17 +142,21 @@ const Index = () => {
 
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
       const processedPDFs: { name: string; data: Uint8Array }[] = [];
+      const allMissingFiles: string[] = [];
 
       for (let i = 0; i < instructions.length; i++) {
         const instruction = instructions[i];
         setMessage(`Merging PDFs for ${instruction.outputName}... (${i + 1}/${instructions.length})`);
         
-        const mergedPdfBytes = await mergePDFs(instruction, pdfMap, (fileProgress) => {
+        const result = await mergePDFs(instruction, pdfMap, (fileProgress) => {
           const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
           setProgress(totalProgress);
         });
 
-        processedPDFs.push({ name: instruction.outputName, data: mergedPdfBytes });
+        if (result.missingFiles.length > 0) {
+          allMissingFiles.push(...result.missingFiles);
+        }
+        processedPDFs.push({ name: instruction.outputName, data: result.data });
       }
 
       setMessage('Creating ZIP file...');
@@ -160,11 +166,19 @@ const Index = () => {
       deductCredits(creditsNeeded);
 
       setStatus('success');
-      setMessage(`Successfully merged ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
+      setMessage(`Successfully merged ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}!`);
       setProgress(100);
+      
+      // Show error report if there were missing files
+      if (allMissingFiles.length > 0) {
+        setErrorReport({ successful: processedPDFs.length, failed: allMissingFiles });
+      }
+      
       toast({
-        title: 'Success!',
-        description: `Downloaded ${instructions.length} merged PDF${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+        title: allMissingFiles.length > 0 ? 'Completed with warnings' : 'Success!',
+        description: allMissingFiles.length > 0 
+          ? `Processed ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}. ${allMissingFiles.length} file${allMissingFiles.length > 1 ? 's were' : ' was'} skipped.`
+          : `Downloaded ${processedPDFs.length} merged PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
       console.error('Error processing PDFs:', error);
@@ -206,17 +220,22 @@ const Index = () => {
 
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
       const processedPDFs: { name: string; data: Uint8Array }[] = [];
+      const allMissingFiles: string[] = [];
 
       for (let i = 0; i < instructions.length; i++) {
         const instruction = instructions[i];
         setMessage(`Processing ${instruction.sourceFile}... (${i + 1}/${instructions.length})`);
         
-        const processedPdfBytes = await deletePagesFromPDF(instruction, pdfMap, (fileProgress) => {
+        const result = await deletePagesFromPDF(instruction, pdfMap, (fileProgress) => {
           const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
           setProgress(totalProgress);
         });
 
-        processedPDFs.push({ name: instruction.outputName, data: processedPdfBytes });
+        if (result) {
+          processedPDFs.push({ name: instruction.outputName, data: result.data });
+        } else {
+          allMissingFiles.push(instruction.sourceFile);
+        }
       }
 
       setMessage('Creating ZIP file...');
@@ -226,11 +245,19 @@ const Index = () => {
       deductCredits(creditsNeeded);
 
       setStatus('success');
-      setMessage(`Successfully processed ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
+      setMessage(`Successfully processed ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}!`);
       setProgress(100);
+      
+      // Show error report if there were missing files
+      if (allMissingFiles.length > 0) {
+        setErrorReport({ successful: processedPDFs.length, failed: allMissingFiles });
+      }
+      
       toast({
-        title: 'Success!',
-        description: `Downloaded ${instructions.length} processed PDF${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+        title: allMissingFiles.length > 0 ? 'Completed with warnings' : 'Success!',
+        description: allMissingFiles.length > 0 
+          ? `Processed ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}. ${allMissingFiles.length} file${allMissingFiles.length > 1 ? 's were' : ' was'} skipped.`
+          : `Downloaded ${processedPDFs.length} processed PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
       console.error('Error processing PDFs:', error);
@@ -272,6 +299,7 @@ const Index = () => {
 
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
       const processedPDFs: { name: string; data: Uint8Array }[] = [];
+      const allMissingFiles: string[] = [];
 
       for (let i = 0; i < instructions.length; i++) {
         const instruction = instructions[i];
@@ -282,7 +310,11 @@ const Index = () => {
           setProgress(totalProgress);
         });
 
-        processedPDFs.push(...splitPdfFiles);
+        if (splitPdfFiles) {
+          processedPDFs.push(...splitPdfFiles);
+        } else {
+          allMissingFiles.push(instruction.sourceFile);
+        }
       }
 
       setMessage('Creating ZIP file...');
@@ -292,11 +324,19 @@ const Index = () => {
       deductCredits(creditsNeeded);
 
       setStatus('success');
-      setMessage(`Successfully split ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
+      setMessage(`Successfully split ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}!`);
       setProgress(100);
+      
+      // Show error report if there were missing files
+      if (allMissingFiles.length > 0) {
+        setErrorReport({ successful: processedPDFs.length, failed: allMissingFiles });
+      }
+      
       toast({
-        title: 'Success!',
-        description: `Downloaded ${processedPDFs.length} split PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+        title: allMissingFiles.length > 0 ? 'Completed with warnings' : 'Success!',
+        description: allMissingFiles.length > 0 
+          ? `Processed ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}. ${allMissingFiles.length} file${allMissingFiles.length > 1 ? 's were' : ' was'} skipped.`
+          : `Downloaded ${processedPDFs.length} split PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
       console.error('Error processing PDFs:', error);
@@ -338,17 +378,22 @@ const Index = () => {
 
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
       const processedPDFs: { name: string; data: Uint8Array }[] = [];
+      const allMissingFiles: string[] = [];
 
       for (let i = 0; i < instructions.length; i++) {
         const instruction = instructions[i];
         setMessage(`Reordering ${instruction.sourceFile}... (${i + 1}/${instructions.length})`);
         
-        const reorderedPdfBytes = await reorderPDF(instruction, pdfMap, (fileProgress) => {
+        const result = await reorderPDF(instruction, pdfMap, (fileProgress) => {
           const totalProgress = ((i / instructions.length) * 100) + (fileProgress / instructions.length);
           setProgress(totalProgress);
         });
 
-        processedPDFs.push({ name: instruction.outputName, data: reorderedPdfBytes });
+        if (result) {
+          processedPDFs.push({ name: instruction.outputName, data: result.data });
+        } else {
+          allMissingFiles.push(instruction.sourceFile);
+        }
       }
 
       setMessage('Creating ZIP file...');
@@ -358,11 +403,19 @@ const Index = () => {
       deductCredits(creditsNeeded);
 
       setStatus('success');
-      setMessage(`Successfully reordered ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
+      setMessage(`Successfully reordered ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}!`);
       setProgress(100);
+      
+      // Show error report if there were missing files
+      if (allMissingFiles.length > 0) {
+        setErrorReport({ successful: processedPDFs.length, failed: allMissingFiles });
+      }
+      
       toast({
-        title: 'Success!',
-        description: `Downloaded ${instructions.length} reordered PDF${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+        title: allMissingFiles.length > 0 ? 'Completed with warnings' : 'Success!',
+        description: allMissingFiles.length > 0 
+          ? `Processed ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}. ${allMissingFiles.length} file${allMissingFiles.length > 1 ? 's were' : ' was'} skipped.`
+          : `Downloaded ${processedPDFs.length} reordered PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
       console.error('Error processing PDFs:', error);
@@ -404,13 +457,19 @@ const Index = () => {
 
       const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
       const processedPDFs: { name: string; data: Uint8Array }[] = [];
+      const allMissingFiles: string[] = [];
 
       for (let i = 0; i < instructions.length; i++) {
         const instruction = instructions[i];
         setMessage(`Renaming ${instruction.oldName}... (${i + 1}/${instructions.length})`);
         
         const renamedPdf = await renamePDF(instruction, pdfMap);
-        processedPDFs.push(renamedPdf);
+        
+        if (renamedPdf) {
+          processedPDFs.push(renamedPdf);
+        } else {
+          allMissingFiles.push(instruction.oldName);
+        }
         
         const progress = ((i + 1) / instructions.length) * 100;
         setProgress(progress);
@@ -423,11 +482,19 @@ const Index = () => {
       deductCredits(creditsNeeded);
 
       setStatus('success');
-      setMessage(`Successfully renamed ${instructions.length} PDF${instructions.length > 1 ? 's' : ''}!`);
+      setMessage(`Successfully renamed ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}!`);
       setProgress(100);
+      
+      // Show error report if there were missing files
+      if (allMissingFiles.length > 0) {
+        setErrorReport({ successful: processedPDFs.length, failed: allMissingFiles });
+      }
+      
       toast({
-        title: 'Success!',
-        description: `Downloaded ${instructions.length} renamed PDF${instructions.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+        title: allMissingFiles.length > 0 ? 'Completed with warnings' : 'Success!',
+        description: allMissingFiles.length > 0 
+          ? `Processed ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}. ${allMissingFiles.length} file${allMissingFiles.length > 1 ? 's were' : ' was'} skipped.`
+          : `Downloaded ${processedPDFs.length} renamed PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
       });
     } catch (error) {
       console.error('Error processing PDFs:', error);
@@ -662,6 +729,7 @@ const Index = () => {
     setStatus('idle');
     setProgress(0);
     setMessage('');
+    setErrorReport(null);
   };
 
   return (
@@ -1014,6 +1082,15 @@ const Index = () => {
 
           {/* Processing Status */}
           <ProcessingStatus status={status} progress={progress} message={message} />
+          
+          {/* Error Report */}
+          {errorReport && (
+            <ErrorReport 
+              successful={errorReport.successful} 
+              failed={errorReport.failed}
+              onClose={() => setErrorReport(null)}
+            />
+          )}
 
           {/* Action Buttons */}
           <div className="flex justify-center gap-4">
