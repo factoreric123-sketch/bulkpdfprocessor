@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      processing_jobs: {
+        Row: {
+          created_at: string
+          errors: Json
+          id: string
+          operation: string
+          processed: number
+          result_path: string | null
+          status: string
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          errors?: Json
+          id?: string
+          operation: string
+          processed?: number
+          result_path?: string | null
+          status?: string
+          total: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          errors?: Json
+          id?: string
+          operation?: string
+          processed?: number
+          result_path?: string | null
+          status?: string
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

@@ -133,7 +133,6 @@ const Index = () => {
       const instructions = await parseMergeExcel(excelFile[0]);
       const creditsNeeded = instructions.length;
 
-      // Check credits before processing
       if (!hasCredits(creditsNeeded)) {
         setRequiredCredits(creditsNeeded);
         setShowNoCreditsDialog(true);
@@ -141,77 +140,106 @@ const Index = () => {
         return;
       }
 
-      const pdfMap = new Map(pdfFiles.map((file) => [file.name, file]));
-      const processedPDFs: { name: string; data: Uint8Array }[] = [];
-      const allMissingFiles: string[] = [];
+      if (!user?.id) {
+        toast({ title: 'Sign in required', description: 'Please sign in to start processing.', variant: 'destructive' });
+        setStatus('idle');
+        return;
+      }
 
-      // Batch processing - 20 PDFs at a time
-      const BATCH_SIZE = 20;
-      const totalBatches = Math.ceil(instructions.length / BATCH_SIZE);
-      setBatchProgress({ current: 0, total: totalBatches });
+      // 1) Upload PDFs to storage with the user's prefix
+      setMessage('Uploading files to secure storage...');
+      const CONCURRENCY = 5;
+      const bucket = supabase.storage.from('pdf-uploads');
+      const chunks: File[][] = [];
+      for (let i = 0; i < pdfFiles.length; i += CONCURRENCY) {
+        chunks.push(pdfFiles.slice(i, i + CONCURRENCY));
+      }
+      let uploaded = 0;
+      for (const group of chunks) {
+        await Promise.all(group.map(async (file) => {
+          const path = `${user.id}/${file.name}`;
+          await bucket.upload(path, file, { upsert: true, contentType: 'application/pdf' }).catch(() => {});
+          uploaded += 1;
+          setMessage(`Uploading files... (${uploaded}/${pdfFiles.length})`);
+          setProgress((uploaded / pdfFiles.length) * 30); // reserve first 30% for uploads
+        }));
+      }
 
-      for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
-        const batchStart = batchIndex * BATCH_SIZE;
-        const batchEnd = Math.min(batchStart + BATCH_SIZE, instructions.length);
-        const batchInstructions = instructions.slice(batchStart, batchEnd);
+      // 2) Start server job
+      setMessage('Starting server job...');
+      const { data: start } = await supabase.functions.invoke('process-pdf-batch', {
+        body: { operation: 'merge', instructions },
+      });
+      const jobId: string | undefined = (start as any)?.jobId;
+      if (!jobId) throw new Error('Failed to start processing job');
 
-        setBatchProgress({ current: batchIndex + 1, total: totalBatches });
-        setMessage(`Processing batch ${batchIndex + 1}/${totalBatches}...`);
+      // 3) Poll job status until completion
+      setMessage('Server processing your PDFs...');
+      const pollInterval = 3000;
+      await new Promise<void>((resolve, reject) => {
+        const timer = setInterval(async () => {
+          const { data, error } = await supabase
+            .from('processing_jobs')
+            .select('status, processed, total, errors, result_path')
+            .eq('id', jobId)
+            .single();
 
-        for (let i = 0; i < batchInstructions.length; i++) {
-          const instruction = batchInstructions[i];
-          const absoluteIndex = batchStart + i;
-          setMessage(`Batch ${batchIndex + 1}/${totalBatches}: Merging ${instruction.outputName}... (${absoluteIndex + 1}/${instructions.length})`);
-          
-          const result = await mergePDFs(instruction, pdfMap, (fileProgress) => {
-            const batchProgress = (i / batchInstructions.length) * (100 / totalBatches);
-            const previousBatchesProgress = (batchIndex / totalBatches) * 100;
-            const totalProgress = previousBatchesProgress + batchProgress;
-            setProgress(totalProgress);
-          });
-
-          if (result.missingFiles.length > 0) {
-            allMissingFiles.push(...result.missingFiles);
+          if (error) {
+            clearInterval(timer);
+            reject(error);
+            return;
           }
-          processedPDFs.push({ name: instruction.outputName, data: result.data });
-        }
 
-        // Allow UI to update between batches
-        await new Promise(resolve => setTimeout(resolve, 10));
-      }
+          if (!data) return;
 
-      setMessage('Creating ZIP file...');
-      await downloadPDFsAsZip(processedPDFs);
+          const pct = data.total > 0 ? (data.processed / data.total) * 70 + 30 : 30; // remaining 70%
+          setProgress(Math.min(99, pct));
+          setMessage(`Processing on server... (${data.processed}/${data.total})`);
 
-      // Deduct credits after successful processing
-      deductCredits(creditsNeeded);
+          if (data.status === 'completed') {
+            clearInterval(timer);
+            setProgress(100);
+            setStatus('success');
 
-      setStatus('success');
-      setMessage(`Successfully merged ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}!`);
-      setProgress(100);
-      setBatchProgress({ current: 0, total: 0 });
-      
-      // Show error report if there were missing files
-      if (allMissingFiles.length > 0) {
-        setErrorReport({ successful: processedPDFs.length, failed: allMissingFiles });
-      }
-      
-      toast({
-        title: allMissingFiles.length > 0 ? 'Completed with warnings' : 'Success!',
-        description: allMissingFiles.length > 0 
-          ? `Processed ${processedPDFs.length} PDF${processedPDFs.length > 1 ? 's' : ''}. ${allMissingFiles.length} file${allMissingFiles.length > 1 ? 's were' : ' was'} skipped.`
-          : `Downloaded ${processedPDFs.length} merged PDF${processedPDFs.length > 1 ? 's' : ''} as ZIP. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+            // 4) Download ZIP via signed URL
+            if (data.result_path) {
+              const { data: urlData } = await supabase.storage
+                .from('pdf-results')
+                .createSignedUrl(data.result_path, 60 * 60);
+              if (urlData?.signedUrl) window.open(urlData.signedUrl, '_blank');
+            }
+
+            // Deduct credits after successful processing
+            deductCredits(creditsNeeded);
+
+            // Show error report if any
+            const errs: string[] = (data.errors as any) || [];
+            if (errs.length > 0) {
+              setErrorReport({ successful: data.total, failed: errs });
+              toast({ title: 'Completed with warnings', description: `${errs.length} issue(s) encountered.`, });
+            } else {
+              toast({ title: 'Success!', description: `Processed ${data.total} PDFs. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.` });
+            }
+
+            resolve();
+          }
+
+          if (data.status === 'failed') {
+            clearInterval(timer);
+            setStatus('error');
+            setMessage('Server processing failed');
+            const errs: string[] = (data.errors as any) || [];
+            if (errs.length > 0) setErrorReport({ successful: data.processed, failed: errs });
+            toast({ title: 'Processing failed', description: errs[0] || 'Unknown error', variant: 'destructive' });
+            reject(new Error('Job failed'));
+          }
+        }, pollInterval);
       });
     } catch (error) {
       console.error('Error processing PDFs:', error);
       setStatus('error');
       setMessage(error instanceof Error ? error.message : 'An error occurred while processing PDFs');
-      setBatchProgress({ current: 0, total: 0 });
-      toast({
-        title: 'Processing failed',
-        description: error instanceof Error ? error.message : 'An error occurred',
-        variant: 'destructive',
-      });
+      toast({ title: 'Processing failed', description: error instanceof Error ? error.message : 'An error occurred', variant: 'destructive' });
     }
   };
 
