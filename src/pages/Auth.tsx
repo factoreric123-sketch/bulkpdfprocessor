@@ -125,7 +125,7 @@ const Auth = () => {
             <FileText className="h-12 w-12 text-primary" />
           </div>
           <h1 className="text-3xl font-bold">PDF Processor</h1>
-          <p className="text-muted-foreground">Sign in to continue processing PDFs</p>
+          <p className="text-muted-foreground">{isSignUp ? 'Sign up to continue processing PDFs' : 'Sign in to continue processing PDFs'}</p>
         </div>
 
         <Card>

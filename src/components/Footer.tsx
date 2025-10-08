@@ -76,6 +76,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/auth" 
+                  state={{ isSignUp: true }}
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Get Started
