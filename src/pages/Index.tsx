@@ -914,10 +914,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <header className="bg-gradient-primary text-primary-foreground py-16 px-4 relative z-10">
+      {/* Top Navigation Bar - Sticky */}
+      <div className="sticky top-0 z-50 bg-gradient-primary text-primary-foreground py-4 px-4">
         <div className="container max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex justify-between items-center">
             <div className="flex-1">
               <CreditDisplay 
                 credits={credits} 
@@ -929,7 +929,7 @@ const Index = () => {
             <div className="flex-1 flex justify-center">
               <FileText className="w-16 h-16" />
             </div>
-            <div className="flex-1 flex justify-end gap-2 relative z-20">
+            <div className="flex-1 flex justify-end gap-2">
               {user && (
                 <Button
                   variant="outline"
@@ -982,6 +982,12 @@ const Index = () => {
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Hero Section */}
+      <header className="bg-gradient-primary text-primary-foreground py-12 px-4">
+        <div className="container max-w-6xl mx-auto">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Bulk PDF Processor
