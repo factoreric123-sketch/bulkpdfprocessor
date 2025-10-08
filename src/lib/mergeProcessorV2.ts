@@ -6,8 +6,6 @@ import { validateBatch, canProcessInMemory } from './fileValidation';
 import { FILE_PROCESSING } from './constants';
 import { logger } from './logger';
 import { saveAs } from 'file-saver';
-import { monitoring } from './monitoring';
-import { errorTracker } from './errorTracking';
 
 interface ProcessMergeOptions {
   pdfFiles: File[];
@@ -31,11 +29,6 @@ export async function processMergeV2({
   onProgress,
   onBatchProgress,
 }: ProcessMergeOptions): Promise<ProcessMergeResult> {
-  return monitoring.trackOperation(
-    'pdf_merge_v2',
-    pdfFiles.length,
-    pdfFiles.reduce((sum, f) => sum + f.size, 0),
-    async () => {
   try {
     // Step 1: Parse instructions
     if (onProgress) onProgress(0, 'Parsing Excel instructions...');
@@ -82,17 +75,12 @@ export async function processMergeV2({
     }
   } catch (error) {
     logger.error('Merge processing failed:', error);
-    errorTracker.trackError(error instanceof Error ? error : new Error('Unknown error'), {
-      operation: 'processMergeV2',
-      fileCount: pdfFiles.length,
-    });
     return {
       success: false,
       message: 'Processing failed',
       errors: [error instanceof Error ? error.message : 'Unknown error'],
     };
   }
-  });
 }
 
 // Client-side processing for small batches

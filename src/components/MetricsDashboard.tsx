@@ -6,12 +6,12 @@ export function MetricsDashboard() {
   const { data: metrics } = useQuery({
     queryKey: ['metrics'],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from('metrics_summary')
         .select('*')
         .order('hour', { ascending: false })
         .limit(24);
-      return (data as any[]) || [];
+      return data;
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
