@@ -75,7 +75,7 @@ export const Footer = () => {
               </li>
               <li>
                 <Link 
-                  to="/" 
+                  to="/auth" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
                   Get Started
