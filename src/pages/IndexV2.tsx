@@ -12,6 +12,7 @@ import { SubscriptionStatus } from '@/components/SubscriptionStatus';
 import { NoCreditsDialog } from '@/components/NoCreditsDialog';
 import { ErrorReport } from '@/components/ErrorReport';
 import { Footer } from '@/components/Footer';
+import { MetricsDashboard } from '@/components/MetricsDashboard';
 import { useToast } from '@/hooks/use-toast';
 import { useCredits } from '@/hooks/useCredits';
 import {
@@ -246,6 +247,9 @@ const IndexV2 = () => {
         </div>
 
         <SubscriptionStatus />
+
+        {/* Performance Metrics Dashboard */}
+        {user && <MetricsDashboard />}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-8">
