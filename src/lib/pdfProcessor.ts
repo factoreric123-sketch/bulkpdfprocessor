@@ -382,8 +382,28 @@ export const renamePDF = async (
     return null;
   }
   
+  // Load the existing PDF, update its internal metadata Title to match the new filename
   const arrayBuffer = await file.arrayBuffer();
-  return { name: instruction.newName, data: new Uint8Array(arrayBuffer) };
+  try {
+    const pdfDoc = await PDFDocument.load(arrayBuffer);
+    const baseTitle = instruction.newName.endsWith('.pdf')
+      ? instruction.newName.slice(0, -4)
+      : instruction.newName;
+    try {
+      pdfDoc.setTitle(baseTitle);
+      pdfDoc.setProducer('pdf-lib');
+      pdfDoc.setCreator('Bulk PDF Processor');
+      pdfDoc.setModificationDate(new Date());
+    } catch {
+      // If metadata setting is not supported, proceed without failing
+    }
+    const updatedBytes = await pdfDoc.save();
+    return { name: instruction.newName, data: updatedBytes };
+  } catch (e) {
+    // Fallback: if for any reason we cannot parse with pdf-lib, keep original bytes but rename the file
+    console.warn('Failed to update PDF metadata on rename, returning original bytes. Error:', e);
+    return { name: instruction.newName, data: new Uint8Array(arrayBuffer) };
+  }
 };
 
 export const downloadPDFsAsZip = async (pdfFiles: { name: string; data: Uint8Array }[]) => {
