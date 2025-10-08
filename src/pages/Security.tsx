@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Shield, Lock, Server, CreditCard, Key, FileCheck } from 'lucide-react';
+import { Home, Shield, Lock, Server, CreditCard, Key, FileCheck } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -16,8 +16,8 @@ const Security = () => {
             onClick={() => navigate('/')}
             className="gap-2"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
+            <Home className="h-5 w-5" />
+            Home
           </Button>
         </div>
       </header>

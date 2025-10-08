@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, CreditCard, AlertTriangle, Ban } from 'lucide-react';
+import { Home, FileText, CreditCard, AlertTriangle, Ban } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const TermsOfService = () => {
@@ -15,8 +15,8 @@ const TermsOfService = () => {
             onClick={() => navigate('/')}
             className="gap-2"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
+            <Home className="h-5 w-5" />
+            Home
           </Button>
         </div>
       </header>

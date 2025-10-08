@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Send, ArrowLeft } from 'lucide-react';
+import { Mail, Send, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -76,7 +76,7 @@ const Contact = () => {
             onClick={() => navigate('/')}
             className="mb-6 gap-2 text-primary-foreground hover:bg-background/10"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <Home className="w-5 h-5" />
             Home
           </Button>
           <div className="flex items-center justify-center gap-4 mb-4">
