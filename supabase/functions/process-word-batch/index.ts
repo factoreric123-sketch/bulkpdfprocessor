@@ -142,72 +142,75 @@ async function handleWordToPdfJob(
       const margin = 50;
       
       let currentPage = pdfDoc.addPage();
-      let { width, height } = currentPage.getSize();
-      let y = height - margin;
-      const maxWidth = width - (margin * 2);
+let { width, height } = currentPage.getSize();
+let y = height - margin;
+let maxWidth = width - margin * 2;
 
-      const lines = textContent.split('\n');
-      
-      for (const line of lines) {
-        // Handle empty lines (paragraph breaks)
-        if (!line.trim()) {
-          y -= lineHeight;
-          if (y < margin) {
-            currentPage = pdfDoc.addPage();
-            y = height - margin;
-          }
-          continue;
-        }
+const lines = textContent.split('\n');
 
-        // Word-wrap long lines
-        const words = line.split(' ');
-        let currentLine = '';
-        
-        for (const word of words) {
-          const testLine = currentLine ? `${currentLine} ${word}` : word;
-          const textWidth = font.widthOfTextAtSize(testLine, fontSize);
-          
-          if (textWidth > maxWidth && currentLine) {
-            // Draw the current line
-            currentPage.drawText(currentLine, {
-              x: margin,
-              y,
-              size: fontSize,
-              font,
-              color: rgb(0, 0, 0),
-            });
-            y -= lineHeight;
-            
-            // Check if we need a new page
-            if (y < margin) {
-              currentPage = pdfDoc.addPage();
-              y = height - margin;
-            }
-            
-            currentLine = word;
-          } else {
-            currentLine = testLine;
-          }
-        }
-        
-        // Draw the remaining text of this line
-        if (currentLine) {
-          currentPage.drawText(currentLine, {
-            x: margin,
-            y,
-            size: fontSize,
-            font,
-            color: rgb(0, 0, 0),
-          });
-          y -= lineHeight;
-          
-          // Check if we need a new page
-          if (y < margin) {
-            currentPage = pdfDoc.addPage();
-            y = height - margin;
-          }
-        }
+const wrapLineToWidth = (line: string): string[] => {
+  const parts: string[] = [];
+  let current = '';
+  const tokens = line.split(' ');
+  for (const token of tokens) {
+    const test = current ? `${current} ${token}` : token;
+    if (font.widthOfTextAtSize(test, fontSize) <= maxWidth) {
+      current = test;
+      continue;
+    }
+    if (current) parts.push(current);
+    // Break overly long token into chunks that fit
+    let chunk = '';
+    for (const ch of token) {
+      const t = chunk + ch;
+      if (font.widthOfTextAtSize(t, fontSize) <= maxWidth) {
+        chunk = t;
+      } else {
+        if (chunk) parts.push(chunk);
+        chunk = ch;
       }
+    }
+    current = chunk;
+  }
+  if (current) parts.push(current);
+  return parts.length ? parts : [''];
+};
+
+for (const line of lines) {
+  const wrapped = line.trim() ? wrapLineToWidth(line) : [''];
+  for (const part of wrapped) {
+    if (!part.trim()) {
+      y -= lineHeight;
+      if (y < margin) {
+        currentPage = pdfDoc.addPage();
+        const sz = currentPage.getSize();
+        width = sz.width;
+        height = sz.height;
+        y = height - margin;
+        maxWidth = width - margin * 2;
+      }
+      continue;
+    }
+
+    currentPage.drawText(part, {
+      x: margin,
+      y,
+      size: fontSize,
+      font,
+      color: rgb(0, 0, 0),
+    });
+    y -= lineHeight;
+
+    if (y < margin) {
+      currentPage = pdfDoc.addPage();
+      const sz = currentPage.getSize();
+      width = sz.width;
+      height = sz.height;
+      y = height - margin;
+      maxWidth = width - margin * 2;
+    }
+  }
+}
 
       const pdfBytes = await pdfDoc.save();
       const outName = instruction.outputName.endsWith('.pdf')
