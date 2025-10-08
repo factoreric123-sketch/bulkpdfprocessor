@@ -1,4 +1,4 @@
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, PDFName } from 'pdf-lib';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
@@ -382,25 +382,55 @@ export const renamePDF = async (
     return null;
   }
   
-  // Load the existing PDF, update its internal metadata Title to match the new filename
   const arrayBuffer = await file.arrayBuffer();
   try {
     const pdfDoc = await PDFDocument.load(arrayBuffer);
-    const baseTitle = instruction.newName.endsWith('.pdf')
+
+    const baseTitle = (instruction.newName.endsWith('.pdf')
       ? instruction.newName.slice(0, -4)
-      : instruction.newName;
+      : instruction.newName).trim();
+
+    // Update Info dictionary metadata
     try {
       pdfDoc.setTitle(baseTitle);
       pdfDoc.setProducer('pdf-lib');
       pdfDoc.setCreator('Bulk PDF Processor');
       pdfDoc.setModificationDate(new Date());
     } catch {
-      // If metadata setting is not supported, proceed without failing
+      // ignore
     }
+
+    // ALSO update XMP metadata so viewers that prefer XMP (like Adobe/Chrome) show the new title
+    try {
+      const now = new Date().toISOString();
+      const xmp = `<?xpacket begin=\"\uFEFF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n` +
+        `<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">\n` +
+        `  <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\" xmlns:pdf=\"http://ns.adobe.com/pdf/1.3/\">\n` +
+        `    <rdf:Description rdf:about=\"\" xmp:CreateDate=\"${now}\" xmp:ModifyDate=\"${now}\" pdf:Producer=\"pdf-lib\">\n` +
+        `      <dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">${baseTitle}</rdf:li></rdf:Alt></dc:title>\n` +
+        `      <xmp:CreatorTool>Bulk PDF Processor</xmp:CreatorTool>\n` +
+        `    </rdf:Description>\n` +
+        `  </rdf:RDF>\n` +
+        `</x:xmpmeta>\n` +
+        `<?xpacket end=\"w\"?>`;
+
+      const xmlBytes = new TextEncoder().encode(xmp);
+      const metadataRef = pdfDoc.context.register(
+        pdfDoc.context.stream(xmlBytes, {
+          Type: PDFName.of('Metadata'),
+          Subtype: PDFName.of('XML'),
+        })
+      );
+
+      // Replace existing metadata reference (if any)
+      pdfDoc.catalog.set(PDFName.of('Metadata'), metadataRef);
+    } catch (err) {
+      console.warn('Failed to set XMP metadata on rename (continuing):', err);
+    }
+
     const updatedBytes = await pdfDoc.save();
     return { name: instruction.newName, data: updatedBytes };
   } catch (e) {
-    // Fallback: if for any reason we cannot parse with pdf-lib, keep original bytes but rename the file
     console.warn('Failed to update PDF metadata on rename, returning original bytes. Error:', e);
     return { name: instruction.newName, data: new Uint8Array(arrayBuffer) };
   }
