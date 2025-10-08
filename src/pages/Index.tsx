@@ -661,24 +661,24 @@ const Index = () => {
         <SubscriptionStatus />
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="w-full bg-card shadow-soft px-1 overflow-x-auto gap-2">
-            <TabsTrigger value="merge" className="inline-flex items-center justify-center gap-2 px-4 h-10">
+          <TabsList className="grid w-full grid-cols-5 bg-muted/30 p-1 h-auto rounded-lg">
+            <TabsTrigger value="merge" className="flex items-center justify-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Merge className="w-4 h-4" />
               <span>Merge</span>
             </TabsTrigger>
-            <TabsTrigger value="delete" className="inline-flex items-center justify-center gap-2 px-4 h-10">
+            <TabsTrigger value="delete" className="flex items-center justify-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Scissors className="w-4 h-4" />
               <span>Delete</span>
             </TabsTrigger>
-            <TabsTrigger value="split" className="inline-flex items-center justify-center gap-2 px-4 h-10">
+            <TabsTrigger value="split" className="flex items-center justify-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileStack className="w-4 h-4" />
               <span>Split</span>
             </TabsTrigger>
-            <TabsTrigger value="reorder" className="inline-flex items-center justify-center gap-2 px-4 h-10">
+            <TabsTrigger value="reorder" className="flex items-center justify-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <ArrowDownUp className="w-4 h-4" />
               <span>Reorder</span>
             </TabsTrigger>
-            <TabsTrigger value="rename" className="inline-flex items-center justify-center gap-2 px-4 h-10">
+            <TabsTrigger value="rename" className="flex items-center justify-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileEdit className="w-4 h-4" />
               <span>Rename</span>
             </TabsTrigger>
