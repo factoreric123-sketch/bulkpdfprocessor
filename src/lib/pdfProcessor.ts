@@ -93,7 +93,9 @@ export const parseDeletePagesExcel = (file: File): Promise<DeletePagesInstructio
           
           if (sourceFile && deletePages && outputName) {
             const pagesToDelete = parsePageNumbers(deletePages);
-            instructions.push({ sourceFile, pagesToDelete, outputName });
+            if (pagesToDelete.length > 0) {
+              instructions.push({ sourceFile, pagesToDelete, outputName });
+            }
           }
         }
         
@@ -113,13 +115,38 @@ const parsePageNumbers = (pageString: string): number[] => {
   
   for (const part of parts) {
     const trimmed = part.trim();
+    if (!trimmed) continue; // Skip empty parts
+    
     if (trimmed.includes('-')) {
-      const [start, end] = trimmed.split('-').map(n => parseInt(n.trim()));
+      const rangeParts = trimmed.split('-');
+      if (rangeParts.length !== 2) {
+        logger.warn(`Invalid page range format: ${trimmed}`);
+        continue;
+      }
+      
+      const start = parseInt(rangeParts[0].trim());
+      const end = parseInt(rangeParts[1].trim());
+      
+      if (isNaN(start) || isNaN(end)) {
+        logger.warn(`Invalid page numbers in range: ${trimmed}`);
+        continue;
+      }
+      
+      if (start > end) {
+        logger.warn(`Invalid page range (start > end): ${trimmed}`);
+        continue;
+      }
+      
       for (let i = start; i <= end; i++) {
         pages.push(i - 1); // Convert to 0-indexed
       }
     } else {
-      pages.push(parseInt(trimmed) - 1); // Convert to 0-indexed
+      const pageNum = parseInt(trimmed);
+      if (isNaN(pageNum)) {
+        logger.warn(`Invalid page number: ${trimmed}`);
+        continue;
+      }
+      pages.push(pageNum - 1); // Convert to 0-indexed
     }
   }
   
@@ -170,14 +197,23 @@ export const deletePagesFromPDF = async (
   
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await PDFDocument.load(arrayBuffer);
+  const originalPageCount = pdf.getPageCount();
   
   // Sort pages to delete in descending order to avoid index shifting
   const sortedPages = [...instruction.pagesToDelete].sort((a, b) => b - a);
   
+  let deletedCount = 0;
   for (const pageIndex of sortedPages) {
     if (pageIndex >= 0 && pageIndex < pdf.getPageCount()) {
       pdf.removePage(pageIndex);
+      deletedCount++;
     }
+  }
+  
+  // Check if we deleted all pages
+  if (pdf.getPageCount() === 0) {
+    logger.warn(`All pages would be deleted from: ${instruction.sourceFile}, skipping...`);
+    return null;
   }
   
   onProgress(100);
@@ -214,15 +250,31 @@ export const parseSplitExcel = (file: File): Promise<SplitInstruction[]> => {
           if (sourceFile && ranges && names) {
             const pageRanges = ranges.split(',').map(range => {
               const trimmed = range.trim();
+              if (!trimmed) return null;
+              
               if (trimmed.includes('-')) {
-                const [start, end] = trimmed.split('-').map(n => parseInt(n.trim()));
+                const rangeParts = trimmed.split('-');
+                if (rangeParts.length !== 2) return null;
+                
+                const start = parseInt(rangeParts[0].trim());
+                const end = parseInt(rangeParts[1].trim());
+                
+                if (isNaN(start) || isNaN(end) || start > end || start < 1) return null;
+                
                 return { start: start - 1, end: end - 1 };
               }
+              
               const page = parseInt(trimmed);
+              if (isNaN(page) || page < 1) return null;
+              
               return { start: page - 1, end: page - 1 };
-            });
-            const outputNames = names.split(',').map(n => n.trim());
-            instructions.push({ sourceFile, pageRanges, outputNames });
+            }).filter((range): range is { start: number; end: number } => range !== null);
+            
+            const outputNames = names.split(',').map(n => n.trim()).filter(n => n);
+            
+            if (pageRanges.length > 0 && outputNames.length > 0) {
+              instructions.push({ sourceFile, pageRanges, outputNames });
+            }
           }
         }
         
@@ -258,7 +310,9 @@ export const parseReorderExcel = (file: File): Promise<ReorderInstruction[]> => 
           
           if (sourceFile && pageOrder && outputName) {
             const newPageOrder = parsePageNumbers(pageOrder);
-            instructions.push({ sourceFile, newPageOrder, outputName });
+            if (newPageOrder.length > 0) {
+              instructions.push({ sourceFile, newPageOrder, outputName });
+            }
           }
         }
         
@@ -335,8 +389,13 @@ export const splitPDF = async (
       }
     }
     
-    const pdfBytes = await newPdf.save();
-    results.push({ name: outputName, data: pdfBytes });
+    // Only save if we have at least one page
+    if (newPdf.getPageCount() > 0) {
+      const pdfBytes = await newPdf.save();
+      results.push({ name: outputName, data: pdfBytes });
+    } else {
+      logger.warn(`Split range ${i + 1} resulted in empty PDF, skipping: ${outputName}`);
+    }
     
     onProgress(((i + 1) / instruction.pageRanges.length) * 100);
   }
@@ -360,11 +419,18 @@ export const reorderPDF = async (
   const sourcePdf = await PDFDocument.load(arrayBuffer);
   const newPdf = await PDFDocument.create();
   
+  let validPagesAdded = 0;
   for (const pageIndex of instruction.newPageOrder) {
     if (pageIndex >= 0 && pageIndex < sourcePdf.getPageCount()) {
       const [copiedPage] = await newPdf.copyPages(sourcePdf, [pageIndex]);
       newPdf.addPage(copiedPage);
+      validPagesAdded++;
     }
+  }
+  
+  if (validPagesAdded === 0) {
+    logger.warn(`No valid pages to reorder in: ${instruction.sourceFile}`);
+    return null;
   }
   
   onProgress(100);

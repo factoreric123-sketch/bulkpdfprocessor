@@ -47,8 +47,8 @@ export const convertWordToPdf = async (
   const text = tempDiv.textContent || tempDiv.innerText || '';
   
   // Add pages with text
-  const page = pdfDoc.addPage();
-  const { width, height } = page.getSize();
+  let currentPage = pdfDoc.addPage();
+  let { width, height } = currentPage.getSize();
   const fontSize = 12;
   const maxWidth = width - 100;
   
@@ -58,15 +58,22 @@ export const convertWordToPdf = async (
   for (const line of lines) {
     if (y < 50) {
       // Add new page if needed
-      const newPage = pdfDoc.addPage();
-      y = newPage.getSize().height - 50;
+      currentPage = pdfDoc.addPage();
+      const size = currentPage.getSize();
+      width = size.width;
+      height = size.height;
+      y = height - 50;
     }
     
-    page.drawText(line.substring(0, 100), {
-      x: 50,
-      y,
-      size: fontSize,
-    });
+    // Truncate long lines to prevent overflow
+    const truncatedLine = line.substring(0, 100);
+    if (truncatedLine.trim()) {
+      currentPage.drawText(truncatedLine, {
+        x: 50,
+        y,
+        size: fontSize,
+      });
+    }
     
     y -= fontSize + 5;
   }
@@ -76,8 +83,13 @@ export const convertWordToPdf = async (
   const pdfBytes = await pdfDoc.save();
   onProgress?.(100);
 
+  // Ensure output name has .pdf extension
+  const outputName = instruction.outputName.endsWith('.pdf')
+    ? instruction.outputName
+    : `${instruction.outputName}.pdf`;
+
   return {
-    name: instruction.outputName,
+    name: outputName,
     data: pdfBytes,
   };
 };
@@ -187,8 +199,16 @@ export const renameWordFile = async (
     type: wordFile.type,
   });
 
+  // Ensure the output name has the correct extension
+  let outputName = instruction.newName;
+  if (!outputName.endsWith('.docx') && !outputName.endsWith('.doc')) {
+    // Determine extension from original file
+    const ext = instruction.oldName.endsWith('.docx') ? '.docx' : '.doc';
+    outputName = `${outputName}${ext}`;
+  }
+
   return {
-    name: instruction.newName,
+    name: outputName,
     data: blob,
   };
 };
