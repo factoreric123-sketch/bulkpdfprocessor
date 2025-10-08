@@ -384,29 +384,33 @@ export const renamePDF = async (
   
   const arrayBuffer = await file.arrayBuffer();
   try {
-    const pdfDoc = await PDFDocument.load(arrayBuffer);
+    const srcBytes = await file.arrayBuffer();
+    const sourcePdf = await PDFDocument.load(srcBytes);
+    const newPdf = await PDFDocument.create();
+
+    // Copy all pages into a brand new PDF to fully reset metadata
+    const copiedPages = await newPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
+    copiedPages.forEach((p) => newPdf.addPage(p));
 
     const baseTitle = (instruction.newName.endsWith('.pdf')
       ? instruction.newName.slice(0, -4)
       : instruction.newName).trim();
 
-    // Update Info dictionary metadata
+    // Set classic Info dictionary metadata
     try {
-      pdfDoc.setTitle(baseTitle);
-      pdfDoc.setProducer('pdf-lib');
-      pdfDoc.setCreator('Bulk PDF Processor');
-      pdfDoc.setModificationDate(new Date());
-    } catch {
-      // ignore
-    }
+      newPdf.setTitle(baseTitle);
+      newPdf.setProducer('Bulk PDF Processor');
+      newPdf.setCreator('Bulk PDF Processor');
+      newPdf.setModificationDate(new Date());
+    } catch {}
 
-    // ALSO update XMP metadata so viewers that prefer XMP (like Adobe/Chrome) show the new title
+    // Set XMP metadata as well (some viewers prefer XMP over Info)
     try {
       const now = new Date().toISOString();
       const xmp = `<?xpacket begin=\"\uFEFF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n` +
         `<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">\n` +
         `  <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:xmp=\"http://ns.adobe.com/xap/1.0/\" xmlns:pdf=\"http://ns.adobe.com/pdf/1.3/\">\n` +
-        `    <rdf:Description rdf:about=\"\" xmp:CreateDate=\"${now}\" xmp:ModifyDate=\"${now}\" pdf:Producer=\"pdf-lib\">\n` +
+        `    <rdf:Description rdf:about=\"\" xmp:CreateDate=\"${now}\" xmp:ModifyDate=\"${now}\" pdf:Producer=\"Bulk PDF Processor\">\n` +
         `      <dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">${baseTitle}</rdf:li></rdf:Alt></dc:title>\n` +
         `      <xmp:CreatorTool>Bulk PDF Processor</xmp:CreatorTool>\n` +
         `    </rdf:Description>\n` +
@@ -415,24 +419,22 @@ export const renamePDF = async (
         `<?xpacket end=\"w\"?>`;
 
       const xmlBytes = new TextEncoder().encode(xmp);
-      const metadataRef = pdfDoc.context.register(
-        pdfDoc.context.stream(xmlBytes, {
+      const metadataRef = newPdf.context.register(
+        newPdf.context.stream(xmlBytes, {
           Type: PDFName.of('Metadata'),
           Subtype: PDFName.of('XML'),
         })
       );
-
-      // Replace existing metadata reference (if any)
-      pdfDoc.catalog.set(PDFName.of('Metadata'), metadataRef);
+      newPdf.catalog.set(PDFName.of('Metadata'), metadataRef);
     } catch (err) {
       console.warn('Failed to set XMP metadata on rename (continuing):', err);
     }
 
-    const updatedBytes = await pdfDoc.save();
+    const updatedBytes = await newPdf.save();
     return { name: instruction.newName, data: updatedBytes };
   } catch (e) {
     console.warn('Failed to update PDF metadata on rename, returning original bytes. Error:', e);
-    return { name: instruction.newName, data: new Uint8Array(arrayBuffer) };
+    return { name: instruction.newName, data: new Uint8Array(await file.arrayBuffer()) };
   }
 };
 
