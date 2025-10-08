@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { FileText } from 'lucide-react';
+import { FileText, Home } from 'lucide-react';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -102,8 +102,22 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+      <header className="border-b">
+        <div className="container mx-auto px-4 py-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/')}
+            className="gap-2"
+          >
+            <Home className="h-5 w-5" />
+            Home
+          </Button>
+        </div>
+      </header>
+
+      <div className="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
+        <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
             <FileText className="h-12 w-12 text-primary" />
@@ -206,6 +220,7 @@ const Auth = () => {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );
