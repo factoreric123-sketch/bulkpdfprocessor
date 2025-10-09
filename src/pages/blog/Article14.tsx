@@ -12,6 +12,78 @@ const Article14 = () => {
     if (metaDescription) {
       metaDescription.setAttribute("content", "Discover how Excel spreadsheets revolutionized PDF automation, enabling non-technical users to process thousands of documents with simple instructions.");
     }
+    // SEO: keywords, canonical, OG/Twitter, JSON-LD
+    const origin = window.location.origin;
+    const url = origin + '/blog/excel-meets-pdfs';
+    const keywords = [
+      'Excel to PDF integration',
+      'Excel automation workflow',
+      'Excel-driven bulk actions',
+      'spreadsheet-powered workflow',
+      'Excel batch automation',
+      'zero-code automation'
+    ].join(', ');
+
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.setAttribute('content', keywords);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', url);
+
+    const ensureMeta = (attr: 'name' | 'property', key: string, value: string) => {
+      let tag = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attr, key);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', value);
+    };
+    ensureMeta('property', 'og:title', document.title);
+    ensureMeta('property', 'og:description', metaDescription?.getAttribute('content') || '');
+    ensureMeta('property', 'og:type', 'article');
+    ensureMeta('property', 'og:url', url);
+    ensureMeta('name', 'twitter:title', document.title);
+    ensureMeta('name', 'twitter:description', metaDescription?.getAttribute('content') || '');
+
+    const ld: any[] = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: 'Excel Meets PDFs: How Spreadsheets Became the Ultimate Automation Tool',
+        description: metaDescription?.getAttribute('content') || '',
+        mainEntityOfPage: url,
+        author: { '@type': 'Organization', name: 'Bulk PDF Processor' },
+        publisher: {
+          '@type': 'Organization',
+          name: 'Bulk PDF Processor',
+          logo: { '@type': 'ImageObject', url: origin + '/favicon-512.png' }
+        }
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: origin + '/' },
+          { '@type': 'ListItem', position: 2, name: 'Blog', item: origin + '/blog' },
+          { '@type': 'ListItem', position: 3, name: 'Excel Meets PDFs', item: url }
+        ]
+      }
+    ];
+    const ldScript = document.createElement('script');
+    ldScript.type = 'application/ld+json';
+    ldScript.text = JSON.stringify(ld);
+    document.head.appendChild(ldScript);
   }, []);
 
   return (
@@ -27,6 +99,17 @@ const Article14 = () => {
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Excel Meets PDFs: How Spreadsheets Became the Ultimate Automation Tool</h1>
             <p className="text-xl text-muted-foreground">The unexpected convergence of Excel and PDF processing created the most accessible automation platform for non-technical professionals.</p>
           </header>
+
+          {/* TL;DR */}
+          <div className="mb-10 p-5 rounded-lg border border-border bg-card">
+            <h2 className="text-lg font-semibold mb-2 text-foreground">TL;DR</h2>
+            <ul className="list-disc pl-6 text-muted-foreground space-y-1">
+              <li>Excel is the universal, zero-code language for bulk PDF automation.</li>
+              <li>Rows = tasks, columns = parameters—simple, scalable, powerful.</li>
+              <li>Formulas bring conditional logic without writing a single script.</li>
+              <li>Great for law, accounting, HR—any team that lives in spreadsheets.</li>
+            </ul>
+          </div>
           <div className="prose prose-lg max-w-none">
             <h2>The Democratization of Automation</h2>
             <p>For decades, document automation required programming knowledge. IT departments built custom scripts. Developers wrote Python code. Non-technical staff waited weeks for solutions to simple problems.</p>
