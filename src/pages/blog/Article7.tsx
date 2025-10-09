@@ -20,6 +20,25 @@ const Article7 = () => {
         "Perform complex PDF page manipulation across multiple files without writing code. Master bulk delete, split, and reorder operations."
       );
     }
+    const keywords = [
+      "delete PDF pages in bulk",
+      "split PDFs automatically",
+      "reorder PDF pages",
+      "automatic PDF cleaner",
+      "spreadsheet automation",
+      "Excel instruction-based processing",
+      "intelligent PDF sorter",
+      "smart bulk processing",
+      "secure PDF workspace",
+      "paperless workflow solution"
+    ].join(", ");
+    let keywordsTag = document.querySelector('meta[name="keywords"]');
+    if (!keywordsTag) {
+      keywordsTag = document.createElement("meta");
+      keywordsTag.setAttribute("name", "keywords");
+      document.head.appendChild(keywordsTag);
+    }
+    keywordsTag.setAttribute("content", keywords);
   }, []);
 
   return (
@@ -42,6 +61,15 @@ const Article7 = () => {
               Master advanced PDF page manipulation across hundreds of files using simple Excel instructions. No programming required.
             </p>
           </header>
+
+          <div className="mb-8 p-4 md:p-5 rounded-lg border border-border bg-muted/40">
+            <p className="font-semibold mb-2 text-foreground">TL;DR</p>
+            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+              <li>Describe page edits in Excel—delete, split, reorder—then run once for all files.</li>
+              <li>Handle hundreds of documents consistently with zero hand-editing.</li>
+              <li>Keep originals intact; output to new, clearly named files.</li>
+            </ul>
+          </div>
 
           <div className="prose prose-lg max-w-none">
             <h2>Beyond Basic PDF Operations</h2>
