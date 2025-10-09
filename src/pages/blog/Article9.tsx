@@ -12,6 +12,83 @@ const Article9 = () => {
     if (metaDescription) {
       metaDescription.setAttribute("content", "Industry-specific workflows for legal and accounting professionals managing document-heavy operations with bulk PDF processing.");
     }
+    // SEO: keywords, canonical, OG/Twitter, JSON-LD
+    const origin = window.location.origin;
+    const url = origin + '/blog/bulk-pdf-processor-law-firms-accountants';
+
+    const keywords = [
+      'PDF tool for law firms',
+      'legal document automation',
+      'accounting document processor',
+      'bulk PDF processor',
+      'batch document processing',
+      'document automation',
+      'secure PDF processing',
+      'compliance document handler',
+      'workflow automation for teams',
+      'process hundreds of files instantly'
+    ].join(', ');
+
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.setAttribute('content', keywords);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', url);
+
+    const ensureMeta = (attr: 'name' | 'property', key: string, value: string) => {
+      let tag = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attr, key);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', value);
+    };
+    ensureMeta('property', 'og:title', document.title);
+    ensureMeta('property', 'og:description', metaDescription?.getAttribute('content') || '');
+    ensureMeta('property', 'og:type', 'article');
+    ensureMeta('property', 'og:url', url);
+    ensureMeta('name', 'twitter:title', document.title);
+    ensureMeta('name', 'twitter:description', metaDescription?.getAttribute('content') || '');
+
+    const ld: any[] = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: 'A Step-by-Step Guide to Using Bulk PDF Processor for Law Firms and Accountants',
+        description: metaDescription?.getAttribute('content') || '',
+        mainEntityOfPage: url,
+        author: { '@type': 'Organization', name: 'Bulk PDF Processor' },
+        publisher: {
+          '@type': 'Organization',
+          name: 'Bulk PDF Processor',
+          logo: { '@type': 'ImageObject', url: origin + '/favicon-512.png' }
+        }
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: origin + '/' },
+          { '@type': 'ListItem', position: 2, name: 'Blog', item: origin + '/blog' },
+          { '@type': 'ListItem', position: 3, name: 'Law Firms & Accountants Guide', item: url }
+        ]
+      }
+    ];
+    const ldScript = document.createElement('script');
+    ldScript.type = 'application/ld+json';
+    ldScript.text = JSON.stringify(ld);
+    document.head.appendChild(ldScript);
   }, []);
 
   return (
@@ -27,6 +104,17 @@ const Article9 = () => {
             <h1 className="text-4xl md:text-5xl font-bold mb-4">A Step-by-Step Guide to Using Bulk PDF Processor for Law Firms and Accountants</h1>
             <p className="text-xl text-muted-foreground">Master document-heavy workflows with proven strategies for legal and accounting professionals.</p>
           </header>
+
+          {/* TL;DR */}
+          <div className="mb-10 p-5 rounded-lg border border-border bg-card">
+            <h2 className="text-lg font-semibold mb-2 text-foreground">TL;DR</h2>
+            <ul className="list-disc pl-6 text-muted-foreground space-y-1">
+              <li>Law and accounting teams save hours weekly with batch PDF automation.</li>
+              <li>Use Excel templates to rename, merge, split, and package documents at scale.</li>
+              <li>Secure, consistent, and audit-friendly—ideal for compliance-heavy workflows.</li>
+              <li>Start with small batches, validate, then roll out to the full caseload.</li>
+            </ul>
+          </div>
           <div className="prose prose-lg max-w-none">
             <h2>Why Law Firms and Accounting Practices Need Bulk PDF Processing</h2>
             <p>Legal and accounting professions are document-intensive by nature. Discovery materials, case files, contracts, tax returns, financial statements, audit documentation—all arrive and must be processed in massive volumes. Manual handling creates bottlenecks, errors, and massive time waste.</p>
@@ -53,6 +141,15 @@ const Article9 = () => {
               <li>Scale to full production workflows</li>
               <li>Train team members on the system</li>
             </ol>
+          </div>
+          {/* Related articles */}
+          <div className="mt-12 mb-12">
+            <h2 className="text-2xl font-bold mb-4">Related articles</h2>
+            <ul className="list-disc pl-6 text-muted-foreground">
+              <li><Link to="/blog/merge-pdfs-with-excel" className="text-primary hover:underline">How to Merge Hundreds of PDFs Using Excel Instructions</Link></li>
+              <li><Link to="/blog/manage-100-pdfs-at-once" className="text-primary hover:underline">How to Manage 100 PDFs at Once Without Losing Your Mind</Link></li>
+              <li><Link to="/blog/why-every-office-needs-bulk-pdf-processor" className="text-primary hover:underline">Why Every Office Needs a Bulk PDF Processor in 2025</Link></li>
+            </ul>
           </div>
           <div className="mt-12 mb-12">
             <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>

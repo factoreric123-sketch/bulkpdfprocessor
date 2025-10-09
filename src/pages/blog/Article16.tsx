@@ -12,6 +12,79 @@ const Article16 = () => {
     if (metaDescription) {
       metaDescription.setAttribute("content", "Learn the fastest methods to extract file names from folders using command line tools and automation tricks for bulk PDF processing workflows.");
     }
+    // SEO: keywords, canonical, OG/Twitter, JSON-LD
+    const origin = window.location.origin;
+    const url = origin + '/blog/get-file-names-folder-30-seconds';
+    const keywords = [
+      'process PDFs from Excel list',
+      'control PDFs with spreadsheets',
+      'data-driven file processing',
+      'spreadsheet-powered workflow',
+      'Excel batch automation',
+      'file automation system',
+      'fast PDF processing'
+    ].join(', ');
+
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.setAttribute('content', keywords);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', url);
+
+    const ensureMeta = (attr: 'name' | 'property', key: string, value: string) => {
+      let tag = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attr, key);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', value);
+    };
+    ensureMeta('property', 'og:title', document.title);
+    ensureMeta('property', 'og:description', metaDescription?.getAttribute('content') || '');
+    ensureMeta('property', 'og:type', 'article');
+    ensureMeta('property', 'og:url', url);
+    ensureMeta('name', 'twitter:title', document.title);
+    ensureMeta('name', 'twitter:description', metaDescription?.getAttribute('content') || '');
+
+    const ld: any[] = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: 'How to Get a List of All File Names in a Folder in Under 30 Seconds',
+        description: metaDescription?.getAttribute('content') || '',
+        mainEntityOfPage: url,
+        author: { '@type': 'Organization', name: 'Bulk PDF Processor' },
+        publisher: {
+          '@type': 'Organization',
+          name: 'Bulk PDF Processor',
+          logo: { '@type': 'ImageObject', url: origin + '/favicon-512.png' }
+        }
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: origin + '/' },
+          { '@type': 'ListItem', position: 2, name: 'Blog', item: origin + '/blog' },
+          { '@type': 'ListItem', position: 3, name: 'File Names in 30 Seconds', item: url }
+        ]
+      }
+    ];
+    const ldScript = document.createElement('script');
+    ldScript.type = 'application/ld+json';
+    ldScript.text = JSON.stringify(ld);
+    document.head.appendChild(ldScript);
   }, []);
 
   return (
@@ -27,6 +100,17 @@ const Article16 = () => {
             <h1 className="text-4xl md:text-5xl font-bold mb-4">How to Get a List of All File Names in a Folder in Under 30 Seconds</h1>
             <p className="text-xl text-muted-foreground">Master the fastest command-line tricks to extract file lists for bulk PDF processing and automation workflows.</p>
           </header>
+
+          {/* TL;DR */}
+          <div className="mb-10 p-5 rounded-lg border border-border bg-card">
+            <h2 className="text-lg font-semibold mb-2 text-foreground">TL;DR</h2>
+            <ul className="list-disc pl-6 text-muted-foreground space-y-1">
+              <li>Generate a full file list in seconds using simple commands.</li>
+              <li>Import into Excel to drive bulk PDF operations with zero code.</li>
+              <li>Use full paths for subfolder processing and precise automation.</li>
+              <li>Perfect starting point for renaming, merging, and splitting at scale.</li>
+            </ul>
+          </div>
           <div className="prose prose-lg max-w-none">
             <h2>Why You Need File Lists for Automation</h2>
             <p>Every bulk PDF workflow starts the same way: you need a list of files to process. Manually typing hundreds of filenames into Excel? Nightmare. Copying and pasting one by one? Tedious and error-prone.</p>
