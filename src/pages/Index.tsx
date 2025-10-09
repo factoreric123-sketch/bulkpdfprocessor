@@ -883,6 +883,21 @@ const Index = () => {
         <div className="mt-12 bg-card rounded-lg p-8 shadow-medium border border-border">
           <h3 className="text-2xl font-semibold text-foreground mb-8">Excel Templates & Instructions</h3>
           
+          {/* Tutorial Video */}
+          <div className="mb-8 bg-secondary/30 rounded-lg p-6 border border-border">
+            <h4 className="text-lg font-semibold text-foreground mb-4">How to get all file names in a folder in 20 seconds</h4>
+            <div className="aspect-video w-full max-w-3xl mx-auto">
+              <video 
+                controls 
+                className="w-full h-full rounded-lg shadow-medium"
+                preload="metadata"
+              >
+                <source src="/videos/tutorial-folder-names.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+          
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Merge Template */}
             <div className="border border-border rounded-lg p-5 space-y-3 hover:shadow-lg transition-shadow bg-background">
