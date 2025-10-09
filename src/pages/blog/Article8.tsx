@@ -20,6 +20,37 @@ const Article8 = () => {
         "Systematically rename hundreds of PDFs using data from Excel spreadsheets. Complete guide to automated bulk PDF renaming."
       );
     }
+    // SEO: keywords and canonical
+    const keywords = [
+      "mass PDF renaming",
+      "rename PDFs automatically",
+      "bulk rename via Excel",
+      "Excel-driven bulk actions",
+      "Excel-based PDF commands",
+      "spreadsheet automation",
+      "Excel-controlled PDF system",
+      "PDF file organizer",
+      "organize PDFs in bulk",
+      "how to batch rename PDFs",
+      "data-driven file processing",
+      "online bulk PDF processor"
+    ].join(", ");
+
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.setAttribute('content', keywords);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', window.location.origin + '/blog/rename-pdf-files-automatically');
   }, []);
 
   return (
@@ -42,6 +73,17 @@ const Article8 = () => {
               Transform chaotic file names into organized, searchable systems using Excel-driven bulk renaming. No programming required.
             </p>
           </header>
+
+          {/* TL;DR */}
+          <div className="mb-10 p-5 rounded-lg border border-border bg-card">
+            <h2 className="text-lg font-semibold mb-2 text-foreground">TL;DR</h2>
+            <ul className="list-disc pl-6 text-muted-foreground space-y-1">
+              <li>Turn naming chaos into order with Excel-driven, bulk renaming.</li>
+              <li>Use simple formulas to generate clean, consistent, searchable filenames.</li>
+              <li>Rename hundreds of PDFs in seconds—no code, no typos, no drudgery.</li>
+              <li>Great for invoices, case files, HR records, and large archives.</li>
+            </ul>
+          </div>
 
           <div className="prose prose-lg max-w-none">
             <h2>The File Naming Crisis</h2>

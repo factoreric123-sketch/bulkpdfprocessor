@@ -127,12 +127,79 @@ const BlogIndex = () => {
     if (metaDescription) {
       metaDescription.setAttribute(
         "content",
-        "Expert guides, tips, and best practices for PDF automation, batch processing, and document workflow optimization. Learn how to save hours with bulk PDF operations."
+        "Human-friendly guides on PDF automation, batch processing, and smarter document workflows. Save hours with bulk PDF operations, no-code tools, and Excel-driven automation."
       );
     }
+
+    // Inject/refresh meta keywords using popular search phrases for SEO
+    const keywords = [
+      // Core/bulk ops
+      "bulk PDF processor",
+      "batch PDF processing",
+      "PDF automation tool",
+      "automate PDF tasks",
+      "merge PDFs in bulk",
+      "split PDFs automatically",
+      "delete PDF pages in bulk",
+      "rename PDFs automatically",
+      "reorder PDF pages",
+      // Workflow & benefits
+      "document automation",
+      "smart document management",
+      "save hours processing PDFs",
+      "no-code PDF automation",
+      "fast PDF processing",
+      // Excel integration
+      "Excel PDF automation",
+      "Excel to PDF integration",
+      "Excel-driven bulk actions",
+      // Security & platform
+      "secure PDF processing",
+      "online bulk PDF processor",
+      // Long-tail
+      "how to merge multiple PDFs automatically",
+      "how to split PDF files in bulk",
+      "automate renaming of PDF files"
+    ].join(", ");
+
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.setAttribute('content', keywords);
+
+    // Canonical URL for the blog index
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', window.location.origin + '/blog');
   }, []);
 
   const categories = Array.from(new Set(blogPosts.map(post => post.category)));
+  const popularKeywords = [
+    "bulk PDF processor",
+    "batch PDF processing",
+    "PDF automation tool",
+    "automate PDF tasks",
+    "merge PDFs in bulk",
+    "split PDFs automatically",
+    "delete PDF pages in bulk",
+    "rename PDFs automatically",
+    "reorder PDF pages",
+    "Excel PDF automation",
+    "document automation",
+    "save hours processing PDFs",
+    "no-code PDF automation",
+    "process hundreds of files instantly",
+    "how to merge multiple PDFs automatically",
+    "how to split PDF files in bulk",
+    "automate renaming of PDF files",
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -149,9 +216,26 @@ const BlogIndex = () => {
                 PDF Automation Insights
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-                Expert guides, tips, and strategies to master bulk PDF processing, automate document workflows, 
-                and save hours every week. Perfect for professionals, law firms, and businesses handling high-volume documents.
+                Practical, no-fluff guides to batch PDF processing and smarter document automation. Written like a human, for humans—so you can work faster, reduce errors, and reclaim your day.
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Popular Searches / Tag Cloud */}
+        <div className="container mx-auto px-4 pt-10">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-base font-semibold text-muted-foreground mb-3">Popular searches</h2>
+            <div className="flex flex-wrap gap-2">
+              {popularKeywords.map((kw) => (
+                <span
+                  key={kw}
+                  className="text-xs md:text-sm px-3 py-1 rounded-full border border-border bg-card/60 hover:bg-card transition-colors"
+                  aria-label={`Popular search: ${kw}`}
+                >
+                  {kw}
+                </span>
+              ))}
             </div>
           </div>
         </div>

@@ -14,6 +14,40 @@ const Article2 = () => {
         "Master bulk PDF operations with this comprehensive guide to processing hundreds of documents simultaneously using batch PDF merge, split, and rename techniques."
       );
     }
+    // SEO: keywords and canonical
+    const keywords = [
+      "batch PDF processing",
+      "bulk PDF processor",
+      "batch PDF merger",
+      "PDF splitter tool",
+      "PDF merging software",
+      "automate PDF tasks",
+      "no-code PDF automation",
+      "Excel PDF automation",
+      "process hundreds of files instantly",
+      "workflow automation for teams",
+      "how to merge multiple PDFs automatically",
+      "how to split PDF files in bulk",
+      "automate renaming of PDF files",
+      "secure PDF processing",
+      "online bulk PDF processor"
+    ].join(", ");
+
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.setAttribute('content', keywords);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', window.location.origin + '/blog/ultimate-guide-batch-processing-pdfs');
   }, []);
 
   return (
@@ -44,6 +78,17 @@ const Article2 = () => {
               of PDFs simultaneously using powerful batch techniques that eliminate manual work.
             </p>
           </header>
+
+          {/* TL;DR */}
+          <div className="mb-10 p-5 rounded-lg border border-border bg-card">
+            <h2 className="text-lg font-semibold mb-2 text-foreground">TL;DR</h2>
+            <ul className="list-disc pl-6 text-muted-foreground space-y-1">
+              <li>Batch operations turn hours of manual PDF work into minutes.</li>
+              <li>Merge, split, rename, and reorder at scale with Excel-based instructions.</li>
+              <li>No-code, reliable, and secure—great for high-volume professional workflows.</li>
+              <li>Start small, validate, then scale to hundreds or thousands confidently.</li>
+            </ul>
+          </div>
 
           <div className="prose prose-lg max-w-none">
             <h2 className="text-3xl font-bold mt-12 mb-4 text-foreground">What Is Batch PDF Processing?</h2>

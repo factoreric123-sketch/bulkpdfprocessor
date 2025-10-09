@@ -14,6 +14,42 @@ const Article1 = () => {
         "Learn how to automate PDF merging and splitting, process PDFs automatically, and implement PDF workflow automation for business. Best PDF automation tools 2025."
       );
     }
+
+    // SEO: keywords and canonical
+    const keywords = [
+      "bulk PDF processor",
+      "automate PDF tasks",
+      "PDF automation tool",
+      "batch PDF processing",
+      "merge PDFs in bulk",
+      "split PDFs automatically",
+      "delete PDF pages in bulk",
+      "rename PDFs automatically",
+      "Excel PDF automation",
+      "Excel-driven automation",
+      "no-code PDF automation",
+      "save hours processing PDFs",
+      "how to automate PDFs without coding",
+      "best tool for batch PDF processing",
+      "secure PDF processing",
+      "online bulk PDF processor"
+    ].join(", ");
+
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.setAttribute('content', keywords);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', window.location.origin + '/blog/automate-repetitive-pdf-tasks');
   }, []);
 
   return (
@@ -44,6 +80,17 @@ const Article1 = () => {
               implement intelligent PDF workflow automation for business, and reclaim your time using the best PDF automation tools 2025 has to offer.
             </p>
           </header>
+
+          {/* TL;DR */}
+          <div className="mb-10 p-5 rounded-lg border border-border bg-card">
+            <h2 className="text-lg font-semibold mb-2 text-foreground">TL;DR</h2>
+            <ul className="list-disc pl-6 text-muted-foreground space-y-1">
+              <li>Automate repetitive PDF work (merge, split, rename, delete pages) in batches.</li>
+              <li>Use Excel-driven, no-code instructions—fast setup, zero scripting required.</li>
+              <li>Process hundreds of files in minutes with fewer errors and consistent results.</li>
+              <li>Fits real-world workflows for law, accounting, HR, and operations—secure and reliable.</li>
+            </ul>
+          </div>
 
           <div className="prose prose-lg max-w-none">
             <h2 className="text-3xl font-bold mt-12 mb-4 text-foreground">The Hidden Cost of Manual PDF Processing</h2>

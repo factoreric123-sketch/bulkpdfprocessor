@@ -20,6 +20,37 @@ const Article6 = () => {
         "Use Excel spreadsheets as your command center for sophisticated PDF merging operations. Step-by-step tutorial for bulk PDF merging."
       );
     }
+    // SEO: keywords and canonical
+    const keywords = [
+      "use Excel to merge PDFs",
+      "Excel to PDF integration",
+      "Excel-driven automation",
+      "merge hundreds of PDFs",
+      "batch PDF merger",
+      "merge PDFs in bulk",
+      "no-code PDF automation",
+      "data-driven file processing",
+      "spreadsheet-powered workflow",
+      "Excel merge command",
+      "how to merge multiple PDFs automatically",
+      "online bulk PDF processor"
+    ].join(", ");
+
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.setAttribute('content', keywords);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', window.location.origin + '/blog/merge-pdfs-with-excel');
   }, []);
 
   return (
@@ -42,6 +73,17 @@ const Article6 = () => {
               Turn Excel into your PDF automation command center. Learn to merge hundreds of documents with precision and speed.
             </p>
           </header>
+
+          {/* TL;DR */}
+          <div className="mb-10 p-5 rounded-lg border border-border bg-card">
+            <h2 className="text-lg font-semibold mb-2 text-foreground">TL;DR</h2>
+            <ul className="list-disc pl-6 text-muted-foreground space-y-1">
+              <li>Build an Excel sheet once; merge hundreds of PDFs automatically.</li>
+              <li>No code—just rows, columns, and simple formulas for precise sequencing.</li>
+              <li>Perfect for client packages, case files, and report bundles.</li>
+              <li>Fast, repeatable, and error-resistant for high-volume teams.</li>
+            </ul>
+          </div>
 
           <div className="prose prose-lg max-w-none">
             <h2>Why Excel Is Perfect for PDF Merging</h2>
