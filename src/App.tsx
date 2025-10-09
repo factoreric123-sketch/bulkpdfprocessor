@@ -15,6 +15,9 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
+import BlogIndex from "./pages/blog/BlogIndex";
+import Article1 from "./pages/blog/Article1";
+import Article2 from "./pages/blog/Article2";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +39,9 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/security" element={<Security />} />
+            <Route path="/blog" element={<BlogIndex />} />
+            <Route path="/blog/automate-repetitive-pdf-tasks" element={<Article1 />} />
+            <Route path="/blog/ultimate-guide-batch-processing-pdfs" element={<Article2 />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
