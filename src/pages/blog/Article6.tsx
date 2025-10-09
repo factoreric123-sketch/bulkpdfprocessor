@@ -20,6 +20,25 @@ const Article6 = () => {
         "Use Excel spreadsheets as your command center for sophisticated PDF merging operations. Step-by-step tutorial for bulk PDF merging."
       );
     }
+    const keywords = [
+      "merge hundreds of PDFs",
+      "Excel merge command",
+      "Excel to PDF integration",
+      "batch PDF merger",
+      "data-driven file processing",
+      "spreadsheet-powered workflow",
+      "no-code PDF automation",
+      "AI for PDFs",
+      "secure PDF processing",
+      "intelligent file automation"
+    ].join(", ");
+    let keywordsTag = document.querySelector('meta[name="keywords"]');
+    if (!keywordsTag) {
+      keywordsTag = document.createElement("meta");
+      keywordsTag.setAttribute("name", "keywords");
+      document.head.appendChild(keywordsTag);
+    }
+    keywordsTag.setAttribute("content", keywords);
   }, []);
 
   return (
@@ -42,6 +61,15 @@ const Article6 = () => {
               Turn Excel into your PDF automation command center. Learn to merge hundreds of documents with precision and speed.
             </p>
           </header>
+
+          <div className="mb-8 p-4 md:p-5 rounded-lg border border-border bg-muted/40">
+            <p className="font-semibold mb-2 text-foreground">TL;DR</p>
+            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+              <li>List source files, group by client/project, and assign sequence in Excel.</li>
+              <li>Upload instructions once to batch‑merge hundreds of PDFs consistently.</li>
+              <li>Ideal for legal, accounting, and reporting packages.</li>
+            </ul>
+          </div>
 
           <div className="prose prose-lg max-w-none">
             <h2>Why Excel Is Perfect for PDF Merging</h2>

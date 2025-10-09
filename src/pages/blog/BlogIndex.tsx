@@ -127,12 +127,43 @@ const BlogIndex = () => {
     if (metaDescription) {
       metaDescription.setAttribute(
         "content",
-        "Expert guides, tips, and best practices for PDF automation, batch processing, and document workflow optimization. Learn how to save hours with bulk PDF operations."
+        "Human-written guides on batch PDF processing, no-code PDF automation, Excel integration, and smart document workflows. Learn practical ways to save hours every week."
       );
     }
+
+    // Add/Update meta keywords for SEO (kept concise, non-stuffy)
+    const keywords = [
+      "bulk PDF processor",
+      "batch PDF processing",
+      "PDF automation tool",
+      "no-code PDF automation",
+      "Excel to PDF integration",
+      "merge PDFs in bulk",
+      "split PDFs automatically",
+      "rename PDFs automatically",
+      "secure PDF processing",
+      "AI-powered document management"
+    ].join(", ");
+    let keywordsTag = document.querySelector('meta[name="keywords"]');
+    if (!keywordsTag) {
+      keywordsTag = document.createElement("meta");
+      keywordsTag.setAttribute("name", "keywords");
+      document.head.appendChild(keywordsTag);
+    }
+    keywordsTag.setAttribute("content", keywords);
   }, []);
 
   const categories = Array.from(new Set(blogPosts.map(post => post.category)));
+  const popularTopics = [
+    "batch PDF processing",
+    "no-code PDF automation",
+    "merge PDFs in bulk",
+    "split PDFs automatically",
+    "rename PDFs automatically",
+    "Excel integration",
+    "secure PDF processing",
+    "AI-powered document management",
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -146,12 +177,19 @@ const BlogIndex = () => {
                 <span className="text-sm font-medium">Knowledge Base</span>
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                PDF Automation Insights
+                Human‑Friendly PDF Automation
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-                Expert guides, tips, and strategies to master bulk PDF processing, automate document workflows, 
-                and save hours every week. Perfect for professionals, law firms, and businesses handling high-volume documents.
+                No fluff—just clear checklists, real examples, and Excel‑driven, no‑code batch PDF processing. 
+                Practical playbooks for teams who want to work faster with fewer errors.
               </p>
+              <div className="mt-6 flex flex-wrap gap-2 justify-center">
+                {popularTopics.map((topic) => (
+                  <span key={topic} className="text-xs font-medium bg-muted text-foreground px-3 py-1 rounded-full border border-border">
+                    {topic}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>

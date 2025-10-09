@@ -20,6 +20,25 @@ const Article4 = () => {
         "Transform disorganized PDF collections into structured, manageable document systems in minutes with proven workflow optimization strategies."
       );
     }
+    const keywords = [
+      "PDF file organizer",
+      "document automation",
+      "file automation system",
+      "Excel PDF automation",
+      "batch document processing",
+      "smart workflow engine",
+      "document efficiency tools",
+      "intelligent file automation",
+      "secure PDF workspace",
+      "streamline document tasks"
+    ].join(", ");
+    let keywordsTag = document.querySelector('meta[name="keywords"]');
+    if (!keywordsTag) {
+      keywordsTag = document.createElement("meta");
+      keywordsTag.setAttribute("name", "keywords");
+      document.head.appendChild(keywordsTag);
+    }
+    keywordsTag.setAttribute("content", keywords);
   }, []);
 
   return (
@@ -42,6 +61,15 @@ const Article4 = () => {
               Stop drowning in disorganized PDFs. Learn the exact workflow system that transforms document chaos into streamlined efficiency.
             </p>
           </header>
+
+        <div className="mb-8 p-4 md:p-5 rounded-lg border border-border bg-muted/40">
+          <p className="font-semibold mb-2 text-foreground">TL;DR</p>
+          <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+            <li>Audit, name, structure, and execute—your four-step path from chaos to clarity.</li>
+            <li>Use Excel + bulk automation to reorganize hundreds of PDFs in minutes.</li>
+            <li>Maintain clarity with lightweight intake rules and monthly tune-ups.</li>
+          </ul>
+        </div>
 
           <div className="prose prose-lg max-w-none">
             <h2>The Document Chaos Problem</h2>

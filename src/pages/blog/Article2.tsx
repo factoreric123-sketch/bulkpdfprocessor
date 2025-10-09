@@ -6,7 +6,7 @@ import { useEffect } from "react";
 
 const Article2 = () => {
   useEffect(() => {
-    document.title = "The Ultimate Guide to Batch Processing PDFs: Merge, Split, Rename & More";
+    document.title = "The Ultimate Guide to Batch Processing PDFs: Merge, Split, Rename & More | Bulk PDF Processor";
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute(
@@ -14,6 +14,25 @@ const Article2 = () => {
         "Master bulk PDF operations with this comprehensive guide to processing hundreds of documents simultaneously using batch PDF merge, split, and rename techniques."
       );
     }
+    const keywords = [
+      "batch PDF processing",
+      "bulk PDF merger",
+      "PDF splitter tool",
+      "batch PDF workflow",
+      "manage PDFs efficiently",
+      "Excel-driven automation",
+      "no-code PDF automation",
+      "AI-powered document management",
+      "secure PDF processing",
+      "process hundreds of files instantly"
+    ].join(", ");
+    let keywordsTag = document.querySelector('meta[name="keywords"]');
+    if (!keywordsTag) {
+      keywordsTag = document.createElement("meta");
+      keywordsTag.setAttribute("name", "keywords");
+      document.head.appendChild(keywordsTag);
+    }
+    keywordsTag.setAttribute("content", keywords);
   }, []);
 
   return (
@@ -44,6 +63,15 @@ const Article2 = () => {
               of PDFs simultaneously using powerful batch techniques that eliminate manual work.
             </p>
           </header>
+
+        <div className="mb-8 p-4 md:p-5 rounded-lg border border-border bg-muted/40">
+          <p className="font-semibold mb-2 text-foreground">TL;DR</p>
+          <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+            <li>Think in batches, not files—define once, apply to hundreds.</li>
+            <li>No-code, Excel-based instructions power merging, splitting, renaming, and page edits.</li>
+            <li>Great for teams who need speed, accuracy, and secure processing at scale.</li>
+          </ul>
+        </div>
 
           <div className="prose prose-lg max-w-none">
             <h2 className="text-3xl font-bold mt-12 mb-4 text-foreground">What Is Batch PDF Processing?</h2>

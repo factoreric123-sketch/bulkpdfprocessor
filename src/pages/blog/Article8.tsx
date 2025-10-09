@@ -20,6 +20,25 @@ const Article8 = () => {
         "Systematically rename hundreds of PDFs using data from Excel spreadsheets. Complete guide to automated bulk PDF renaming."
       );
     }
+    const keywords = [
+      "mass PDF renaming",
+      "rename PDFs automatically",
+      "Excel-based PDF commands",
+      "bulk rename via Excel",
+      "data-driven file processing",
+      "smart file management",
+      "automate multi-file processing",
+      "intelligent document control",
+      "secure file automation",
+      "business document solutions"
+    ].join(", ");
+    let keywordsTag = document.querySelector('meta[name="keywords"]');
+    if (!keywordsTag) {
+      keywordsTag = document.createElement("meta");
+      keywordsTag.setAttribute("name", "keywords");
+      document.head.appendChild(keywordsTag);
+    }
+    keywordsTag.setAttribute("content", keywords);
   }, []);
 
   return (
@@ -42,6 +61,15 @@ const Article8 = () => {
               Transform chaotic file names into organized, searchable systems using Excel-driven bulk renaming. No programming required.
             </p>
           </header>
+
+          <div className="mb-8 p-4 md:p-5 rounded-lg border border-border bg-muted/40">
+            <p className="font-semibold mb-2 text-foreground">TL;DR</p>
+            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+              <li>Export current names, generate new names with formulas, and run one rename batch.</li>
+              <li>Consistent, searchable filenames with no typing or manual mistakes.</li>
+              <li>Works with Excel or Google Sheets; keep backups to allow easy rollback.</li>
+            </ul>
+          </div>
 
           <div className="prose prose-lg max-w-none">
             <h2>The File Naming Crisis</h2>
