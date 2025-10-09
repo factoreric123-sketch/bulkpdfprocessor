@@ -29,7 +29,7 @@ const blogPosts = [
   },
   {
     id: 4,
-    slug: "streamlining-document-workflow",
+    slug: "from-chaos-to-clarity",
     title: "From Chaos to Clarity: Streamlining Your Document Workflow in Minutes",
     description: "Transform disorganized PDF collections into structured, manageable document systems effortlessly.",
     category: "Workflow",
@@ -43,7 +43,7 @@ const blogPosts = [
   },
   {
     id: 6,
-    slug: "merge-pdfs-excel-instructions",
+    slug: "merge-pdfs-with-excel",
     title: "How to Merge Hundreds of PDFs Using Excel Instructions",
     description: "Use Excel spreadsheets as your command center for sophisticated PDF merging operations.",
     category: "Tutorial",
@@ -57,7 +57,7 @@ const blogPosts = [
   },
   {
     id: 8,
-    slug: "rename-pdf-files-excel",
+    slug: "rename-pdf-files-automatically",
     title: "How to Rename PDF Files Automatically Based on Excel Columns",
     description: "Systematically rename hundreds of PDFs using data from your Excel spreadsheets.",
     category: "Automation",
@@ -92,7 +92,7 @@ const blogPosts = [
   },
   {
     id: 13,
-    slug: "behind-scenes-smart-logic",
+    slug: "behind-the-scenes-smart-logic",
     title: "Behind the Scenes: How Bulk PDF Processor Uses Smart Logic to Handle Massive Tasks",
     description: "Understand the technology and algorithms that power efficient bulk PDF processing.",
     category: "Technical",
