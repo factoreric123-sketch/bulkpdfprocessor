@@ -1038,7 +1038,7 @@ const Index = () => {
           
           {/* Tutorial Video */}
           <div className="mt-8 bg-secondary/30 rounded-lg p-6 border border-border">
-            <h4 className="text-lg font-semibold text-foreground mb-4">Tutorial: Generating File Name Lists for Excel Templates</h4>
+            <h4 className="text-lg font-semibold text-foreground mb-4">How can I get a list of all the file names in a folder in under 30 seconds?</h4>
             <div className="aspect-video w-full max-w-3xl mx-auto">
               <video 
                 controls 
