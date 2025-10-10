@@ -113,31 +113,56 @@ const Article11 = () => {
               <li>Start with one high-impact workflow; expand after quick wins.</li>
             </ul>
           </div>
-          <div className="prose prose-lg max-w-none">
-            <h2>The Automation Revolution</h2>
-            <p>Document management is undergoing its biggest transformation in decades. What once required teams of administrative staff now happens automatically. The shift isn't just about efficiency—it's about survival in competitive markets.</p>
+          <div className="prose prose-lg max-w-none space-y-8">
+            <section>
+              <h2 className="text-3xl font-bold mb-4">The Automation Revolution</h2>
+              <p className="text-lg leading-relaxed mb-6">
+                Document management is undergoing its biggest transformation in decades. What once required teams of administrative staff now happens automatically. The shift isn't just about efficiency—it's about survival in competitive markets.
+              </p>
+            </section>
             
-            <h2>Why Manual Processing Is Dying</h2>
-            <p>The average knowledge worker handles 10,000+ documents annually. Manual processing doesn't scale. Human error compounds. Costs spiral. Forward-thinking organizations are abandoning manual workflows entirely.</p>
+            <section>
+              <h2 className="text-3xl font-bold mb-4">Why Manual Processing Is Dying</h2>
+              <p className="text-lg leading-relaxed mb-6">
+                The average knowledge worker handles 10,000+ documents annually. Manual processing doesn't scale. Human error compounds. Costs spiral. Forward-thinking organizations are abandoning manual workflows entirely.
+              </p>
+            </section>
             
-            <h2>The Five Pillars of Document Automation</h2>
-            <h3>1. Intelligent Classification</h3>
-            <p>AI systems automatically categorize documents by type, content, and purpose without human intervention.</p>
+            <section>
+              <h2 className="text-3xl font-bold mb-4">The Five Pillars of Document Automation</h2>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">1. Intelligent Classification</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                AI systems automatically categorize documents by type, content, and purpose without human intervention.
+              </p>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">2. Bulk Operations</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Process hundreds of files simultaneously with instruction-based automation systems.
+              </p>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">3. Workflow Integration</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Documents flow automatically between systems—CRM, accounting, project management—without manual transfers.
+              </p>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">4. Version Control</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Automated tracking ensures latest versions are always accessible while maintaining audit trails.
+              </p>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">5. Predictive Analytics</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Systems learn usage patterns and suggest optimizations, becoming smarter over time.
+              </p>
+            </section>
             
-            <h3>2. Bulk Operations</h3>
-            <p>Process hundreds of files simultaneously with instruction-based automation systems.</p>
-            
-            <h3>3. Workflow Integration</h3>
-            <p>Documents flow automatically between systems—CRM, accounting, project management—without manual transfers.</p>
-            
-            <h3>4. Version Control</h3>
-            <p>Automated tracking ensures latest versions are always accessible while maintaining audit trails.</p>
-            
-            <h3>5. Predictive Analytics</h3>
-            <p>Systems learn usage patterns and suggest optimizations, becoming smarter over time.</p>
-            
-            <h2>What This Means for Your Business</h2>
-            <p>Embrace automation now or fall behind competitors who are already operating at 10x efficiency. The choice is clear: automate or become obsolete.</p>
+            <section>
+              <h2 className="text-3xl font-bold mb-4">What This Means for Your Business</h2>
+              <p className="text-lg leading-relaxed">
+                Embrace automation now or fall behind competitors who are already operating at 10x efficiency. The choice is clear: automate or become obsolete.
+              </p>
+            </section>
           </div>
           <div className="mt-12 mb-12">
             <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>

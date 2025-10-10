@@ -110,25 +110,44 @@ const Article13 = () => {
               <li>Enterprise-grade architecture, human-friendly control.</li>
             </ul>
           </div>
-          <div className="prose prose-lg max-w-none">
-            <h2>The Technical Challenge</h2>
-            <p>Processing hundreds of PDFs simultaneously requires sophisticated orchestration. Memory management, error handling, parallel processing, and instruction parsing must all work flawlessly.</p>
+          <div className="prose prose-lg max-w-none space-y-8">
+            <section>
+              <h2 className="text-3xl font-bold mb-4">The Technical Challenge</h2>
+              <p className="text-lg leading-relaxed mb-6">
+                Processing hundreds of PDFs simultaneously requires sophisticated orchestration. Memory management, error handling, parallel processing, and instruction parsing must all work flawlessly.
+              </p>
+            </section>
             
-            <h2>Core Technologies</h2>
-            <h3>Instruction Parser</h3>
-            <p>Reads Excel files and translates human-readable instructions into executable operations. Validates inputs before processing to prevent errors.</p>
+            <section>
+              <h2 className="text-3xl font-bold mb-4">Core Technologies</h2>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">Instruction Parser</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Reads Excel files and translates human-readable instructions into executable operations. Validates inputs before processing to prevent errors.
+              </p>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">Batch Orchestrator</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Manages parallel processing threads, ensuring maximum CPU utilization without overwhelming system resources.
+              </p>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">Error Recovery System</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Handles edge cases gracefully. If one file fails, others continue processing. Detailed error reports identify issues without halting workflows.
+              </p>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">Memory Optimization</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Streams large PDFs rather than loading entirely into memory. Processes files in chunks to maintain performance even with gigabyte-sized documents.
+              </p>
+            </section>
             
-            <h3>Batch Orchestrator</h3>
-            <p>Manages parallel processing threads, ensuring maximum CPU utilization without overwhelming system resources.</p>
-            
-            <h3>Error Recovery System</h3>
-            <p>Handles edge cases gracefully. If one file fails, others continue processing. Detailed error reports identify issues without halting workflows.</p>
-            
-            <h3>Memory Optimization</h3>
-            <p>Streams large PDFs rather than loading entirely into memory. Processes files in chunks to maintain performance even with gigabyte-sized documents.</p>
-            
-            <h2>Performance at Scale</h2>
-            <p>Bulk PDF Processor handles 1,000+ file operations in minutes thanks to optimized algorithms and parallel processing architecture. The system scales linearly—doubling files doesn't double processing time.</p>
+            <section>
+              <h2 className="text-3xl font-bold mb-4">Performance at Scale</h2>
+              <p className="text-lg leading-relaxed">
+                Bulk PDF Processor handles 1,000+ file operations in minutes thanks to optimized algorithms and parallel processing architecture. The system scales linearly—doubling files doesn't double processing time.
+              </p>
+            </section>
           </div>
           <div className="mt-12 mb-12">
             <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>

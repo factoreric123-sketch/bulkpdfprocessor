@@ -115,32 +115,52 @@ const Article9 = () => {
               <li>Start with small batches, validate, then roll out to the full caseload.</li>
             </ul>
           </div>
-          <div className="prose prose-lg max-w-none">
-            <h2>Why Law Firms and Accounting Practices Need Bulk PDF Processing</h2>
-            <p>Legal and accounting professions are document-intensive by nature. Discovery materials, case files, contracts, tax returns, financial statements, audit documentation—all arrive and must be processed in massive volumes. Manual handling creates bottlenecks, errors, and massive time waste.</p>
-            <p>Bulk PDF processing transforms these workflows from tedious manual labor into streamlined automation. This guide provides specific, actionable strategies for both industries.</p>
+          <div className="prose prose-lg max-w-none space-y-8">
+            <section>
+              <h2 className="text-3xl font-bold mb-4">Why Law Firms and Accounting Practices Need Bulk PDF Processing</h2>
+              <p className="text-lg leading-relaxed mb-4">
+                Legal and accounting professions are document-intensive by nature. Discovery materials, case files, contracts, tax returns, financial statements, audit documentation—all arrive and must be processed in massive volumes. Manual handling creates bottlenecks, errors, and massive time waste.
+              </p>
+              <p className="text-lg leading-relaxed mb-6">
+                Bulk PDF processing transforms these workflows from tedious manual labor into streamlined automation. This guide provides specific, actionable strategies for both industries.
+              </p>
+            </section>
             
-            <h2>For Law Firms: Discovery Document Management</h2>
-            <h3>The Challenge</h3>
-            <p>Discovery often involves thousands of documents with cryptic names, requiring organization by party, date, document type, and relevance. Paralegals spend weeks manually reviewing, renaming, and categorizing.</p>
-            <h3>The Bulk Processing Solution</h3>
-            <p>Create Excel templates mapping document IDs to parties, dates, and types. Use bulk rename to apply consistent naming: "CaseID_Party_DocType_Date.pdf". Merge documents by party for attorney review packages. Split large productions into manageable sections.</p>
+            <section>
+              <h2 className="text-3xl font-bold mb-4">For Law Firms: Discovery Document Management</h2>
+              <h3 className="text-2xl font-semibold mt-6 mb-3">The Challenge</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Discovery often involves thousands of documents with cryptic names, requiring organization by party, date, document type, and relevance. Paralegals spend weeks manually reviewing, renaming, and categorizing.
+              </p>
+              <h3 className="text-2xl font-semibold mt-6 mb-3">The Bulk Processing Solution</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Create Excel templates mapping document IDs to parties, dates, and types. Use bulk rename to apply consistent naming: "CaseID_Party_DocType_Date.pdf". Merge documents by party for attorney review packages. Split large productions into manageable sections.
+              </p>
+            </section>
             
-            <h2>For Accounting Firms: Tax Season Workflows</h2>
-            <h3>The Challenge</h3>
-            <p>Tax season means hundreds of client packages, each containing returns, supporting schedules, documentation. Manual assembly takes hours per client.</p>
-            <h3>The Bulk Processing Solution</h3>
-            <p>Build Excel merge templates listing required documents per client. Bulk merge creates complete packages automatically. Rename files with consistent client-date-type patterns for easy retrieval.</p>
+            <section>
+              <h2 className="text-3xl font-bold mb-4">For Accounting Firms: Tax Season Workflows</h2>
+              <h3 className="text-2xl font-semibold mt-6 mb-3">The Challenge</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Tax season means hundreds of client packages, each containing returns, supporting schedules, documentation. Manual assembly takes hours per client.
+              </p>
+              <h3 className="text-2xl font-semibold mt-6 mb-3">The Bulk Processing Solution</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Build Excel merge templates listing required documents per client. Bulk merge creates complete packages automatically. Rename files with consistent client-date-type patterns for easy retrieval.
+              </p>
+            </section>
             
-            <h2>Step-by-Step Implementation</h2>
-            <ol>
-              <li>Identify your highest-volume repetitive PDF tasks</li>
-              <li>Document current manual process steps</li>
-              <li>Create Excel instruction templates for automation</li>
-              <li>Test on small batches (10-20 files)</li>
-              <li>Scale to full production workflows</li>
-              <li>Train team members on the system</li>
-            </ol>
+            <section>
+              <h2 className="text-3xl font-bold mb-4">Step-by-Step Implementation</h2>
+              <ol className="list-decimal pl-6 space-y-3">
+                <li className="leading-relaxed">Identify your highest-volume repetitive PDF tasks</li>
+                <li className="leading-relaxed">Document current manual process steps</li>
+                <li className="leading-relaxed">Create Excel instruction templates for automation</li>
+                <li className="leading-relaxed">Test on small batches (10-20 files)</li>
+                <li className="leading-relaxed">Scale to full production workflows</li>
+                <li className="leading-relaxed">Train team members on the system</li>
+              </ol>
+            </section>
           </div>
           {/* Related articles */}
           <div className="mt-12 mb-12">

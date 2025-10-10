@@ -110,33 +110,48 @@ const Article10 = () => {
               <li>Use small test runs; scale once results look perfect.</li>
             </ul>
           </div>
-          <div className="prose prose-lg max-w-none">
-            <h2>Getting Started with Bulk PDF Processing</h2>
-            <p>If you're new to bulk PDF operations, this tutorial walks you through your first project step-by-step. No technical expertise required—just follow along.</p>
+          <div className="prose prose-lg max-w-none space-y-8">
+            <section>
+              <h2 className="text-3xl font-bold mb-4">Getting Started with Bulk PDF Processing</h2>
+              <p className="text-lg leading-relaxed mb-6">
+                If you're new to bulk PDF operations, this tutorial walks you through your first project step-by-step. No technical expertise required—just follow along.
+              </p>
+            </section>
             
-            <h2>Your First Project: Cleaning Up 50 Scanned Documents</h2>
-            <h3>What You'll Learn</h3>
-            <ul>
-              <li>How to rename files consistently</li>
-              <li>How to remove unwanted pages</li>
-              <li>How to merge related documents</li>
-            </ul>
+            <section>
+              <h2 className="text-3xl font-bold mb-4">Your First Project: Cleaning Up 50 Scanned Documents</h2>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">What You'll Learn</h3>
+              <ul className="list-disc pl-6 space-y-2 mb-6">
+                <li className="leading-relaxed">How to rename files consistently</li>
+                <li className="leading-relaxed">How to remove unwanted pages</li>
+                <li className="leading-relaxed">How to merge related documents</li>
+              </ul>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">Step 1: Organize Your Files</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Collect all PDFs in one folder. Generate a file list using command prompt (Windows: <code className="bg-muted px-2 py-1 rounded">dir /b</code>) or terminal (Mac: <code className="bg-muted px-2 py-1 rounded">ls</code>). Import this list into Excel.
+              </p>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">Step 2: Plan Your Changes</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                In Excel, add columns for what you want to do: New Filename, Pages to Delete, Files to Merge Together. Don't overthink it—rough planning is fine.
+              </p>
+              
+              <h3 className="text-2xl font-semibold mt-6 mb-3">Step 3: Execute with Bulk Processor</h3>
+              <p className="text-lg leading-relaxed mb-6">
+                Upload your PDFs and Excel file to Bulk PDF Processor. Review the preview, then execute. Your 50 files transform in minutes.
+              </p>
+            </section>
             
-            <h3>Step 1: Organize Your Files</h3>
-            <p>Collect all PDFs in one folder. Generate a file list using command prompt (Windows: <code>dir /b</code>) or terminal (Mac: <code>ls</code>). Import this list into Excel.</p>
-            
-            <h3>Step 2: Plan Your Changes</h3>
-            <p>In Excel, add columns for what you want to do: New Filename, Pages to Delete, Files to Merge Together. Don't overthink it—rough planning is fine.</p>
-            
-            <h3>Step 3: Execute with Bulk Processor</h3>
-            <p>Upload your PDFs and Excel file to Bulk PDF Processor. Review the preview, then execute. Your 50 files transform in minutes.</p>
-            
-            <h2>Common Beginner Mistakes to Avoid</h2>
-            <ul>
-              <li>Not keeping backups before processing</li>
-              <li>Skipping the test run on a few files first</li>
-              <li>Using overly complex formulas when simple works</li>
-            </ul>
+            <section>
+              <h2 className="text-3xl font-bold mb-4">Common Beginner Mistakes to Avoid</h2>
+              <ul className="list-disc pl-6 space-y-2">
+                <li className="leading-relaxed">Not keeping backups before processing</li>
+                <li className="leading-relaxed">Skipping the test run on a few files first</li>
+                <li className="leading-relaxed">Using overly complex formulas when simple works</li>
+              </ul>
+            </section>
           </div>
           <div className="mt-12 mb-12">
             <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
