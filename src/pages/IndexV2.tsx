@@ -181,8 +181,329 @@ const IndexV2 = () => {
     }
   };
 
-  // Note: Other processing functions (processDeletePages, processSplit, processReorder, processRename) 
-  // would need to be implemented here following the same pattern as processMerge
+  const processDeletePages = async () => {
+    if (pdfFiles.length === 0 || excelFile.length === 0) {
+      toast({
+        title: 'Missing files',
+        description: 'Please upload both PDF files and an Excel instruction file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStatus('processing');
+    setMessage('Parsing Excel instructions...');
+    setProgress(0);
+    setErrorReport(null);
+    setBatchProgress({ current: 0, total: 0 });
+
+    try {
+      const instructions = await parseDeletePagesExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
+      if (!user?.id) {
+        toast({ title: 'Sign in required', description: 'Please sign in to start processing.', variant: 'destructive' });
+        setStatus('idle');
+        return;
+      }
+
+      const { processOperationV2 } = await import('@/lib/batchProcessorV2');
+      const result = await processOperationV2({
+        operation: 'delete',
+        pdfFiles,
+        instructions,
+        userId: user.id,
+        onProgress: (progress, message) => {
+          setProgress(progress);
+          setMessage(message);
+        },
+        onBatchProgress: (current, total) => {
+          setBatchProgress({ current, total });
+        },
+      });
+
+      if (result.success) {
+        await deductCredits(creditsNeeded);
+        setStatus('success');
+        setMessage('✅ Processing completed successfully!');
+        
+        if (result.errors && result.errors.length > 0) {
+          setErrorReport({
+            successful: result.processedCount || 0,
+            failed: result.errors,
+          });
+        }
+        
+        toast({
+          title: 'Success!',
+          description: `Successfully processed ${result.processedCount} delete operations. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+        });
+      } else {
+        throw new Error(result.message || 'Processing failed');
+      }
+    } catch (error) {
+      logger.error('Delete pages error:', error);
+      setStatus('error');
+      setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      toast({
+        title: 'Processing failed',
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setBatchProgress({ current: 0, total: 0 });
+    }
+  };
+
+  const processSplit = async () => {
+    if (pdfFiles.length === 0 || excelFile.length === 0) {
+      toast({
+        title: 'Missing files',
+        description: 'Please upload both PDF files and an Excel instruction file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStatus('processing');
+    setMessage('Parsing Excel instructions...');
+    setProgress(0);
+    setErrorReport(null);
+    setBatchProgress({ current: 0, total: 0 });
+
+    try {
+      const instructions = await parseSplitExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
+      if (!user?.id) {
+        toast({ title: 'Sign in required', description: 'Please sign in to start processing.', variant: 'destructive' });
+        setStatus('idle');
+        return;
+      }
+
+      const { processOperationV2 } = await import('@/lib/batchProcessorV2');
+      const result = await processOperationV2({
+        operation: 'split',
+        pdfFiles,
+        instructions,
+        userId: user.id,
+        onProgress: (progress, message) => {
+          setProgress(progress);
+          setMessage(message);
+        },
+        onBatchProgress: (current, total) => {
+          setBatchProgress({ current, total });
+        },
+      });
+
+      if (result.success) {
+        await deductCredits(creditsNeeded);
+        setStatus('success');
+        setMessage('✅ Processing completed successfully!');
+        
+        if (result.errors && result.errors.length > 0) {
+          setErrorReport({
+            successful: result.processedCount || 0,
+            failed: result.errors,
+          });
+        }
+        
+        toast({
+          title: 'Success!',
+          description: `Successfully processed ${result.processedCount} split operations. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+        });
+      } else {
+        throw new Error(result.message || 'Processing failed');
+      }
+    } catch (error) {
+      logger.error('Split error:', error);
+      setStatus('error');
+      setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      toast({
+        title: 'Processing failed',
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setBatchProgress({ current: 0, total: 0 });
+    }
+  };
+
+  const processReorder = async () => {
+    if (pdfFiles.length === 0 || excelFile.length === 0) {
+      toast({
+        title: 'Missing files',
+        description: 'Please upload both PDF files and an Excel instruction file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStatus('processing');
+    setMessage('Parsing Excel instructions...');
+    setProgress(0);
+    setErrorReport(null);
+    setBatchProgress({ current: 0, total: 0 });
+
+    try {
+      const instructions = await parseReorderExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
+      if (!user?.id) {
+        toast({ title: 'Sign in required', description: 'Please sign in to start processing.', variant: 'destructive' });
+        setStatus('idle');
+        return;
+      }
+
+      const { processOperationV2 } = await import('@/lib/batchProcessorV2');
+      const result = await processOperationV2({
+        operation: 'reorder',
+        pdfFiles,
+        instructions,
+        userId: user.id,
+        onProgress: (progress, message) => {
+          setProgress(progress);
+          setMessage(message);
+        },
+        onBatchProgress: (current, total) => {
+          setBatchProgress({ current, total });
+        },
+      });
+
+      if (result.success) {
+        await deductCredits(creditsNeeded);
+        setStatus('success');
+        setMessage('✅ Processing completed successfully!');
+        
+        if (result.errors && result.errors.length > 0) {
+          setErrorReport({
+            successful: result.processedCount || 0,
+            failed: result.errors,
+          });
+        }
+        
+        toast({
+          title: 'Success!',
+          description: `Successfully processed ${result.processedCount} reorder operations. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+        });
+      } else {
+        throw new Error(result.message || 'Processing failed');
+      }
+    } catch (error) {
+      logger.error('Reorder error:', error);
+      setStatus('error');
+      setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      toast({
+        title: 'Processing failed',
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setBatchProgress({ current: 0, total: 0 });
+    }
+  };
+
+  const processRename = async () => {
+    if (pdfFiles.length === 0 || excelFile.length === 0) {
+      toast({
+        title: 'Missing files',
+        description: 'Please upload both PDF files and an Excel instruction file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setStatus('processing');
+    setMessage('Parsing Excel instructions...');
+    setProgress(0);
+    setErrorReport(null);
+    setBatchProgress({ current: 0, total: 0 });
+
+    try {
+      const instructions = await parseRenameExcel(excelFile[0]);
+      const creditsNeeded = instructions.length;
+
+      if (!hasCredits(creditsNeeded)) {
+        setRequiredCredits(creditsNeeded);
+        setShowNoCreditsDialog(true);
+        setStatus('idle');
+        return;
+      }
+
+      if (!user?.id) {
+        toast({ title: 'Sign in required', description: 'Please sign in to start processing.', variant: 'destructive' });
+        setStatus('idle');
+        return;
+      }
+
+      const { processOperationV2 } = await import('@/lib/batchProcessorV2');
+      const result = await processOperationV2({
+        operation: 'rename',
+        pdfFiles,
+        instructions,
+        userId: user.id,
+        onProgress: (progress, message) => {
+          setProgress(progress);
+          setMessage(message);
+        },
+        onBatchProgress: (current, total) => {
+          setBatchProgress({ current, total });
+        },
+      });
+
+      if (result.success) {
+        await deductCredits(creditsNeeded);
+        setStatus('success');
+        setMessage('✅ Processing completed successfully!');
+        
+        if (result.errors && result.errors.length > 0) {
+          setErrorReport({
+            successful: result.processedCount || 0,
+            failed: result.errors,
+          });
+        }
+        
+        toast({
+          title: 'Success!',
+          description: `Successfully processed ${result.processedCount} rename operations. ${creditsNeeded} credit${creditsNeeded > 1 ? 's' : ''} used.`,
+        });
+      } else {
+        throw new Error(result.message || 'Processing failed');
+      }
+    } catch (error) {
+      logger.error('Rename error:', error);
+      setStatus('error');
+      setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      toast({
+        title: 'Processing failed',
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setBatchProgress({ current: 0, total: 0 });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -336,6 +657,286 @@ const IndexV2 = () => {
             >
               <Merge className="h-5 w-5 mr-2" />
               Merge PDFs ({pdfFiles.length} files)
+            </Button>
+          </TabsContent>
+
+          {/* Split Tab */}
+          <TabsContent value="split" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">1. Upload PDF Files to Split</h3>
+                <FileUpload
+                  accept=".pdf"
+                  multiple
+                  onFilesSelected={handlePdfFiles}
+                  maxFiles={FILE_PROCESSING.MAX_FILES_PER_BATCH}
+                  maxSize={FILE_PROCESSING.MAX_FILE_SIZE}
+                />
+                <div className="space-y-2">
+                  {pdfFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 border rounded">
+                      <span className="text-sm truncate">{file.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemovePdfFile(index)}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">2. Upload Excel Instructions</h3>
+                  <Button variant="outline" size="sm" onClick={downloadSplitTemplate}>
+                    <Download className="h-4 w-4 mr-1" />
+                    Template
+                  </Button>
+                </div>
+                <FileUpload
+                  accept=".xlsx,.xls"
+                  onFilesSelected={handleExcelFile}
+                  maxFiles={1}
+                />
+                {excelFile.length > 0 && (
+                  <div className="flex items-center justify-between p-2 border rounded">
+                    <span className="text-sm truncate">{excelFile[0].name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveExcelFile(0)}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <ProcessingStatus status={status} progress={progress} message={message} batchProgress={batchProgress} />
+            {errorReport && <ErrorReport report={errorReport} />}
+            
+            <Button
+              onClick={processSplit}
+              disabled={status === 'processing' || pdfFiles.length === 0 || excelFile.length === 0}
+              size="lg"
+              className="w-full"
+            >
+              <Scissors className="h-5 w-5 mr-2" />
+              Split PDFs ({pdfFiles.length} files)
+            </Button>
+          </TabsContent>
+
+          {/* Delete Pages Tab */}
+          <TabsContent value="delete" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">1. Upload PDF Files</h3>
+                <FileUpload
+                  accept=".pdf"
+                  multiple
+                  onFilesSelected={handlePdfFiles}
+                  maxFiles={FILE_PROCESSING.MAX_FILES_PER_BATCH}
+                  maxSize={FILE_PROCESSING.MAX_FILE_SIZE}
+                />
+                <div className="space-y-2">
+                  {pdfFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 border rounded">
+                      <span className="text-sm truncate">{file.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemovePdfFile(index)}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">2. Upload Excel Instructions</h3>
+                  <Button variant="outline" size="sm" onClick={downloadDeleteTemplate}>
+                    <Download className="h-4 w-4 mr-1" />
+                    Template
+                  </Button>
+                </div>
+                <FileUpload
+                  accept=".xlsx,.xls"
+                  onFilesSelected={handleExcelFile}
+                  maxFiles={1}
+                />
+                {excelFile.length > 0 && (
+                  <div className="flex items-center justify-between p-2 border rounded">
+                    <span className="text-sm truncate">{excelFile[0].name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveExcelFile(0)}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <ProcessingStatus status={status} progress={progress} message={message} batchProgress={batchProgress} />
+            {errorReport && <ErrorReport report={errorReport} />}
+            
+            <Button
+              onClick={processDeletePages}
+              disabled={status === 'processing' || pdfFiles.length === 0 || excelFile.length === 0}
+              size="lg"
+              className="w-full"
+            >
+              <FileStack className="h-5 w-5 mr-2" />
+              Delete Pages ({pdfFiles.length} files)
+            </Button>
+          </TabsContent>
+
+          {/* Reorder Tab */}
+          <TabsContent value="reorder" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">1. Upload PDF Files to Reorder</h3>
+                <FileUpload
+                  accept=".pdf"
+                  multiple
+                  onFilesSelected={handlePdfFiles}
+                  maxFiles={FILE_PROCESSING.MAX_FILES_PER_BATCH}
+                  maxSize={FILE_PROCESSING.MAX_FILE_SIZE}
+                />
+                <div className="space-y-2">
+                  {pdfFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 border rounded">
+                      <span className="text-sm truncate">{file.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemovePdfFile(index)}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">2. Upload Excel Instructions</h3>
+                  <Button variant="outline" size="sm" onClick={downloadReorderTemplate}>
+                    <Download className="h-4 w-4 mr-1" />
+                    Template
+                  </Button>
+                </div>
+                <FileUpload
+                  accept=".xlsx,.xls"
+                  onFilesSelected={handleExcelFile}
+                  maxFiles={1}
+                />
+                {excelFile.length > 0 && (
+                  <div className="flex items-center justify-between p-2 border rounded">
+                    <span className="text-sm truncate">{excelFile[0].name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveExcelFile(0)}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <ProcessingStatus status={status} progress={progress} message={message} batchProgress={batchProgress} />
+            {errorReport && <ErrorReport report={errorReport} />}
+            
+            <Button
+              onClick={processReorder}
+              disabled={status === 'processing' || pdfFiles.length === 0 || excelFile.length === 0}
+              size="lg"
+              className="w-full"
+            >
+              <ArrowDownUp className="h-5 w-5 mr-2" />
+              Reorder Pages ({pdfFiles.length} files)
+            </Button>
+          </TabsContent>
+
+          {/* Rename Tab */}
+          <TabsContent value="rename" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">1. Upload PDF Files to Rename</h3>
+                <FileUpload
+                  accept=".pdf"
+                  multiple
+                  onFilesSelected={handlePdfFiles}
+                  maxFiles={FILE_PROCESSING.MAX_FILES_PER_BATCH}
+                  maxSize={FILE_PROCESSING.MAX_FILE_SIZE}
+                />
+                <div className="space-y-2">
+                  {pdfFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 border rounded">
+                      <span className="text-sm truncate">{file.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemovePdfFile(index)}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">2. Upload Excel Instructions</h3>
+                  <Button variant="outline" size="sm" onClick={downloadRenameTemplate}>
+                    <Download className="h-4 w-4 mr-1" />
+                    Template
+                  </Button>
+                </div>
+                <FileUpload
+                  accept=".xlsx,.xls"
+                  onFilesSelected={handleExcelFile}
+                  maxFiles={1}
+                />
+                {excelFile.length > 0 && (
+                  <div className="flex items-center justify-between p-2 border rounded">
+                    <span className="text-sm truncate">{excelFile[0].name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveExcelFile(0)}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <ProcessingStatus status={status} progress={progress} message={message} batchProgress={batchProgress} />
+            {errorReport && <ErrorReport report={errorReport} />}
+            
+            <Button
+              onClick={processRename}
+              disabled={status === 'processing' || pdfFiles.length === 0 || excelFile.length === 0}
+              size="lg"
+              className="w-full"
+            >
+              <FileEdit className="h-5 w-5 mr-2" />
+              Rename PDFs ({pdfFiles.length} files)
             </Button>
           </TabsContent>
         </Tabs>
